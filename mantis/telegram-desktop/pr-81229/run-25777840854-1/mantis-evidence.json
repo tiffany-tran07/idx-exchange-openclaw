@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "telegram-desktop-proof",
+  "title": "Mantis Telegram Desktop Proof",
+  "summary": "Mantis could not start native Telegram Desktop proof because the shared Telegram user credential pool was exhausted after Crabbox provider fallback.",
+  "scenario": "telegram-desktop-proof",
+  "comparison": {
+    "baseline": {
+      "ref": "0904357eb926e94856354fd4307dca7e5058ac98",
+      "sha": "0904357eb926e94856354fd4307dca7e5058ac98",
+      "expected": "baseline native Telegram Desktop proof captured",
+      "status": "fail",
+      "error": "Telegram credential broker returned POOL_EXHAUSTED before baseline session start."
+    },
+    "candidate": {
+      "ref": "1df4dcd97978c053e3b096b554ac562b72ed72dc",
+      "sha": "1df4dcd97978c053e3b096b554ac562b72ed72dc",
+      "expected": "candidate native Telegram Desktop proof captured",
+      "status": "fail",
+      "fixed": false,
+      "error": "Candidate session was not started because the shared Telegram user credential was unavailable."
+    },
+    "pass": false
+  },
+  "artifacts": [
+    {
+      "kind": "report",
+      "lane": "run",
+      "label": "Mantis blocker report",
+      "path": "mantis-report.md",
+      "targetPath": "mantis-report.md"
+    }
+  ]
+}
