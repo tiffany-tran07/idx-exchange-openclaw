@@ -80,6 +80,11 @@ export function createEmbeddedRunAuthController(params: {
   setThinkLevel(next: ThinkLevel): void;
   log: LogLike;
 }) {
+  /**
+   * Applies provider-runtime auth overrides to both runtime and effective model views.
+   * Keeping them in sync prevents stream requests and diagnostics from using
+   * different base URLs or headers after a profile/plugin auth handoff.
+   */
   const applyPreparedRuntimeRequestOverrides = (paramsForApply: {
     runtimeModel: Model;
     preparedAuth: {
@@ -166,6 +171,7 @@ export function createEmbeddedRunAuthController(params: {
     clearRuntimeAuthRefreshTimer();
   };
 
+  /** Refreshes one runtime-auth generation, coalescing concurrent callers onto one promise. */
   const refreshRuntimeAuth = async (reason: string): Promise<void> => {
     const runtimeAuthState = params.getRuntimeAuthState();
     if (!runtimeAuthState) {
@@ -245,6 +251,10 @@ export function createEmbeddedRunAuthController(params: {
     await refreshPromise;
   };
 
+  /**
+   * Schedules proactive runtime-auth refresh before provider expiry, with one bounded
+   * retry timer after transient preparation failures.
+   */
   const scheduleRuntimeAuthRefresh = (): void => {
     const runtimeAuthState = params.getRuntimeAuthState();
     if (!runtimeAuthState || params.getRuntimeAuthRefreshCancelled()) {
@@ -303,6 +313,7 @@ export function createEmbeddedRunAuthController(params: {
     }
   };
 
+  /** Classifies auth-profile exhaustion using profile health when every candidate is unavailable. */
   const resolveAuthProfileFailoverReason = (failoverParams: {
     allInCooldown: boolean;
     message: string;
@@ -367,6 +378,7 @@ export function createEmbeddedRunAuthController(params: {
     throw new Error(message);
   };
 
+  /** Resolves the API credential for one profile candidate before runtime-auth preparation. */
   const resolveApiKeyForCandidate = async (candidate?: string) => {
     return getApiKeyForModel({
       model: params.getRuntimeModel(),
