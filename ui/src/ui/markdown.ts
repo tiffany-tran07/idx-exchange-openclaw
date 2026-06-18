@@ -19,7 +19,7 @@ import MarkdownIt from "markdown-it";
 import markdownItTaskLists from "markdown-it-task-lists";
 import { stripUnsupportedCitationControlMarkers } from "../../../src/shared/text/citation-control-markers.js";
 import { i18n, t } from "../i18n/index.ts";
-import { encodeCodeBlockCopyPayload } from "./chat/code-block-copy-payload.ts";
+import { encodeBlockArtCodeBlockCopyPayload } from "./chat/code-block-copy-payload.ts";
 import { truncateText } from "./format.ts";
 import { inferBasePathFromPathname, normalizeBasePath, tabFromPath } from "./navigation.ts";
 import { normalizeLowercaseStringOrEmpty } from "./string-coerce.ts";
@@ -742,12 +742,15 @@ function renderCodeBlock(
   env: unknown,
   options: { blockArt?: boolean; copyText?: string } = {},
 ): string {
-  const codeBlock = renderCodeElement(text, lang, options);
+  const blockArt = options.blockArt || isMarkdownBlockArtText(text);
+  const codeBlock = renderCodeElement(text, lang, { blockArt });
   if (!shouldRenderCodeBlockCopy(env)) {
     return codeBlock;
   }
   const langLabel = lang ? `<span class="code-block-lang">${escapeHtml(lang)}</span>` : "";
-  const attrSafe = escapeHtml(encodeCodeBlockCopyPayload(options.copyText ?? text));
+  const copyText = options.copyText ?? text;
+  const copyPayload = blockArt ? encodeBlockArtCodeBlockCopyPayload(copyText) : copyText;
+  const attrSafe = escapeHtml(copyPayload);
   const copyBtn = `<button type="button" class="code-block-copy" data-code="${attrSafe}" aria-label="${escapeHtml(t("common.copyCode"))}"><span class="code-block-copy__idle">${escapeHtml(t("common.copy"))}</span><span class="code-block-copy__done">${escapeHtml(t("common.copied"))}</span></button>`;
   const header = `<div class="code-block-header">${langLabel}${copyBtn}</div>`;
 

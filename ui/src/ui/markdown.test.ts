@@ -2,10 +2,7 @@
 import { render } from "lit";
 import { describe, expect, it, vi } from "vitest";
 import { i18n } from "../i18n/index.ts";
-import {
-  decodeCodeBlockCopyPayload,
-  encodeCodeBlockCopyPayload,
-} from "./chat/code-block-copy-payload.ts";
+import { decodeCodeBlockCopyPayload } from "./chat/code-block-copy-payload.ts";
 import {
   md,
   toSanitizedMarkdownHtml,
@@ -20,8 +17,13 @@ function htmlFragment(html: string): HTMLElement {
   return container;
 }
 
-function codeBlockCopyAttribute(value: string): string {
-  return encodeCodeBlockCopyPayload(value).replaceAll('"', "&quot;");
+function escapedCodeBlockCopyAttribute(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function withControlUiBasePath<T>(basePath: string, fn: () => T): T {
@@ -403,14 +405,14 @@ describe("toSanitizedMarkdownHtml", () => {
       // markdown-it requires a blank line before indented code
       const html = toSanitizedMarkdownHtml("text\n\n    indented code");
       expect(html).toBe(
-        `<p>text</p>\n<div class="code-block-wrapper"><div class="code-block-header"><button type="button" class="code-block-copy" data-code="${codeBlockCopyAttribute("indented code")}" aria-label="Copy code"><span class="code-block-copy__idle">Copy</span><span class="code-block-copy__done">Copied!</span></button></div><pre><code>indented code\n</code></pre></div>`,
+        `<p>text</p>\n<div class="code-block-wrapper"><div class="code-block-header"><button type="button" class="code-block-copy" data-code="${escapedCodeBlockCopyAttribute("indented code")}" aria-label="Copy code"><span class="code-block-copy__idle">Copy</span><span class="code-block-copy__done">Copied!</span></button></div><pre><code>indented code\n</code></pre></div>`,
       );
     });
 
     it("includes copy button", () => {
       const html = toSanitizedMarkdownHtml("```\ncode\n```");
       expect(html).toBe(
-        `<div class="code-block-wrapper"><div class="code-block-header"><button type="button" class="code-block-copy" data-code="${codeBlockCopyAttribute("code")}" aria-label="Copy code"><span class="code-block-copy__idle">Copy</span><span class="code-block-copy__done">Copied!</span></button></div><pre><code>code\n</code></pre></div>`,
+        `<div class="code-block-wrapper"><div class="code-block-header"><button type="button" class="code-block-copy" data-code="${escapedCodeBlockCopyAttribute("code")}" aria-label="Copy code"><span class="code-block-copy__idle">Copy</span><span class="code-block-copy__done">Copied!</span></button></div><pre><code>code\n</code></pre></div>`,
       );
     });
 
@@ -454,6 +456,7 @@ PY
       const copy = fragment.querySelector<HTMLButtonElement>(".code-block-copy");
 
       expect(fragment.querySelector(".code-block-lang")?.textContent).toBe("js");
+      expect(copy?.dataset.code).toBe(source.trimEnd());
       expect(decodeCodeBlockCopyPayload(copy?.dataset.code ?? "")).toBe(source.trimEnd());
       expect(code?.textContent).toBe(source);
       expect(code?.querySelector(".hljs-keyword")?.textContent).toBe("const");
@@ -467,6 +470,7 @@ PY
       const copy = fragment.querySelector<HTMLButtonElement>(".code-block-copy");
 
       expect(copy?.dataset.code).not.toMatch(/^\s|\s$/);
+      expect(copy?.dataset.code).toContain("openclaw:block-art-code:");
       expect(decodeCodeBlockCopyPayload(copy?.dataset.code ?? "")).toBe(source);
       expect(fragment.querySelector("pre code")?.textContent).toBe(`${source}\n`);
     });
@@ -516,6 +520,7 @@ PY
         const englishCopy = englishFragment.querySelector<HTMLButtonElement>(".code-block-copy");
         const chineseCopy = chineseFragment.querySelector<HTMLButtonElement>(".code-block-copy");
 
+        expect(englishCopy?.dataset.code).toBe("const localizedCopy = true;");
         expect(decodeCodeBlockCopyPayload(englishCopy?.dataset.code ?? "")).toBe(
           "const localizedCopy = true;",
         );
@@ -526,6 +531,7 @@ PY
           "const localizedCopy = true;\n",
         );
 
+        expect(chineseCopy?.dataset.code).toBe("const localizedCopy = true;");
         expect(decodeCodeBlockCopyPayload(chineseCopy?.dataset.code ?? "")).toBe(
           "const localizedCopy = true;",
         );
@@ -549,6 +555,7 @@ PY
 
       expect(details?.querySelector("summary")?.textContent).toBe("JSON · 2 lines");
       expect(details?.querySelector(".code-block-lang")?.textContent).toBe("json");
+      expect(copy?.dataset.code).toBe('{"key": "value"}');
       expect(decodeCodeBlockCopyPayload(copy?.dataset.code ?? "")).toBe('{"key": "value"}');
       expect(code?.classList.contains("language-json")).toBe(true);
       expect(code?.textContent).toBe('{"key": "value"}\n');
@@ -803,6 +810,7 @@ describe("toStreamingMarkdownHtml", () => {
     expect(code?.textContent).toContain("… truncated");
     expect(code?.textContent).toContain(`showing first 140000`);
     expect(code?.textContent?.length).toBeLessThan(blockArt.length);
+    expect(copy?.dataset.code).toContain("openclaw:block-art-code:");
     expect(decodeCodeBlockCopyPayload(copy?.dataset.code ?? "")).toBe(code?.textContent);
   });
 

@@ -17,7 +17,7 @@ import {
 import { renderChatQueue } from "../chat/chat-queue.ts";
 import { buildRawSidebarContent } from "../chat/chat-sidebar-raw.ts";
 import { renderWelcomeState } from "../chat/chat-welcome.ts";
-import { encodeCodeBlockCopyPayload } from "../chat/code-block-copy-payload.ts";
+import { encodeBlockArtCodeBlockCopyPayload } from "../chat/code-block-copy-payload.ts";
 import { renderChatSessionSelect } from "../chat/session-controls.ts";
 import type { GatewayBrowserClient } from "../gateway.ts";
 import type { GatewaySessionRow, ModelCatalogEntry, SessionsListResult } from "../types.ts";
@@ -624,7 +624,7 @@ describe("chat code-block copy", () => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "code-block-copy";
-    button.dataset.code = encodeCodeBlockCopyPayload(payload);
+    button.dataset.code = encodeBlockArtCodeBlockCopyPayload(payload);
     thread.appendChild(button);
 
     button.click();
