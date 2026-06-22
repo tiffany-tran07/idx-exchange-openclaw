@@ -133,6 +133,13 @@ export type ClawHubPackageSecurityResponse = {
   } | null;
   trust: ClawHubPackageSecurityTrust;
 };
+export type ClawHubPackageReadiness = {
+  ok?: boolean;
+  ready?: boolean;
+  status?: string | null;
+  reasons?: string[];
+  checks?: Record<string, unknown>;
+} & Record<string, unknown>;
 export type ClawHubPackageClawPackSummary = {
   available: boolean;
   specVersion?: number | null;

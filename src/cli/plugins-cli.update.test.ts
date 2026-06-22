@@ -1165,7 +1165,7 @@ describe("plugins cli update", () => {
           pluginId: "demo",
           status: "skipped",
           message:
-            'Skipped demo ClawHub update: ClawHub release "@openclaw/plugin-demo@1.1.0" was not installed because the risk was not acknowledged. Review the warning above; to continue anyway, rerun with --acknowledge-clawhub-risk. Existing installed plugin left unchanged.',
+            "Skipped demo ClawHub update: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. Existing installed plugin left unchanged.",
         },
       ],
       changed: false,
@@ -1204,7 +1204,7 @@ describe("plugins cli update", () => {
           status: "skipped",
           code: "clawhub_download_blocked",
           message:
-            'Skipped demo ClawHub update: ClawHub release "@openclaw/plugin-demo@1.1.0" cannot be installed because ClawHub flagged it as blocked or malicious. Review the security details above or choose a different version. Existing installed plugin left unchanged.',
+            "Skipped demo ClawHub update: ClawHub blocked this release; update was not started. Existing installed plugin left unchanged.",
         },
       ],
       changed: false,
@@ -1219,7 +1219,7 @@ describe("plugins cli update", () => {
     await expect(runPluginsCommand(["plugins", "update", "demo"])).rejects.toThrow("__exit__:1");
 
     expect(writePersistedInstalledPluginIndexInstallRecords).not.toHaveBeenCalled();
-    expect(runtimeLogs.at(-1)).toContain("blocked or malicious");
+    expect(runtimeLogs.at(-1)).toContain("ClawHub blocked this release");
   });
 
   it("exits non-zero when a ClawHub update is skipped because security data is unavailable", async () => {

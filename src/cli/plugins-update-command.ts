@@ -23,13 +23,13 @@ import {
   updateNpmInstalledPlugins,
 } from "../plugins/update.js";
 import { defaultRuntime } from "../runtime.js";
+import { resolveClawHubRiskAcknowledgementCliOptions } from "./clawhub-risk-acknowledgement.js";
 import {
   containsConfigIncludeDirective,
   resolveCombinedPluginAndHookConfigMutationPreflight,
   resolveInstallConfigMutationPreflights,
   selectInstallMutationWriteOptions,
 } from "./plugins-install-persist.js";
-import { resolveClawHubRiskAcknowledgementCliOptions } from "./clawhub-risk-acknowledgement.js";
 import { commitPluginInstallRecordsWithConfig } from "./plugins-install-record-commit.js";
 import { refreshPluginRegistryAfterConfigMutation } from "./plugins-registry-refresh.js";
 import { logPluginUpdateOutcomes } from "./plugins-update-outcomes.js";
@@ -148,7 +148,7 @@ export async function runPluginUpdateCommand(params: {
   );
   const logger = {
     info: (msg: string) => defaultRuntime.log(msg),
-    warn: (msg: string) => defaultRuntime.log(theme.warn(msg)),
+    warn: (msg: string) => defaultRuntime.log(msg.includes("╭─") ? msg : theme.warn(msg)),
   };
   if (params.opts.dangerouslyForceUnsafeInstall) {
     defaultRuntime.log(theme.warn(DEPRECATED_DANGEROUS_FORCE_UNSAFE_UPDATE_WARNING));

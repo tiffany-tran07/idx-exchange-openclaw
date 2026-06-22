@@ -253,6 +253,10 @@ function isNonBlockingClawHubTrustNotice(message: string): boolean {
   );
 }
 
+function formatPluginUpdateWarning(message: string): string {
+  return message.includes("╭─") ? message : theme.warn(message);
+}
+
 function resolveUpdateClawHubRiskAcknowledgementOptions(
   opts: UpdateCommandOptions,
   params: {
@@ -275,9 +279,7 @@ function resolveUpdateClawHubRiskAcknowledgementOptions(
       const releaseLabel = `${packageName}@${sanitizeTerminalText(request.version)}`;
       if (request.acknowledgementKind === "type-package") {
         const answer = await text({
-          message: stylePromptMessage(
-            `To update anyway, type the package name for "${releaseLabel}"`,
-          ),
+          message: stylePromptMessage(`type: '${packageName}' to update anyway`),
           placeholder: packageName,
         });
         return !isCancel(answer) && answer.trim() === packageName;
@@ -1880,7 +1882,7 @@ export async function updatePluginsAfterCoreUpdate(params: {
       loggedPluginWarnings.add(msg);
       recordClawHubTrustNotice(msg);
       if (!params.opts.json) {
-        defaultRuntime.log(theme.warn(msg));
+        defaultRuntime.log(formatPluginUpdateWarning(msg));
       }
     },
     error: (msg: string) => {
@@ -1906,7 +1908,7 @@ export async function updatePluginsAfterCoreUpdate(params: {
         loggedPluginWarnings.add(warning);
         recordClawHubTrustNotice(warning);
         if (!params.opts.json) {
-          defaultRuntime.log(theme.warn(warning));
+          defaultRuntime.log(formatPluginUpdateWarning(warning));
         }
       },
     },
@@ -2180,7 +2182,7 @@ export async function updatePluginsAfterCoreUpdate(params: {
   }
   for (const warning of syncResult.summary.warnings) {
     if (!loggedPluginWarnings.has(warning)) {
-      defaultRuntime.log(theme.warn(warning));
+      defaultRuntime.log(formatPluginUpdateWarning(warning));
     }
   }
   for (const error of syncResult.summary.errors) {

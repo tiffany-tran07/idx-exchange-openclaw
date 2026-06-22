@@ -13,6 +13,7 @@ import {
   resolveDefaultAgentId,
 } from "../agents/agent-scope.js";
 import { getRuntimeConfig } from "../config/config.js";
+import { CLAWHUB_TRUST_ERROR_CODE } from "../infra/clawhub-install-trust.js";
 import {
   fetchClawHubSkillCard,
   fetchClawHubSkillVerification,
@@ -81,6 +82,17 @@ function resolveSkillClawHubRiskOptions(
     ...(riskOptions.acknowledgeClawHubRisk ? { acknowledgeClawHubRisk: true } : {}),
     ...(riskOptions.onClawHubRisk ? { onClawHubRisk: riskOptions.onClawHubRisk } : {}),
   };
+}
+
+function formatSkillWarning(message: string): string {
+  return message.includes("╭─") ? message : theme.warn(message);
+}
+
+function isClawHubSkillTrustCliFailure(code: string | undefined): boolean {
+  return (
+    code === CLAWHUB_TRUST_ERROR_CODE.CLAWHUB_DOWNLOAD_BLOCKED ||
+    code === CLAWHUB_TRUST_ERROR_CODE.CLAWHUB_RISK_ACKNOWLEDGEMENT_REQUIRED
+  );
 }
 
 type ResolveSkillsWorkspaceOptions = {
@@ -388,7 +400,7 @@ export function registerSkillsCli(program: Command) {
               force: Boolean(opts.force),
               logger: {
                 info: (message) => defaultRuntime.log(message),
-                warn: (message) => defaultRuntime.log(theme.warn(message)),
+                warn: (message) => defaultRuntime.log(formatSkillWarning(message)),
               },
             });
             if (!result.ok) {
@@ -420,11 +432,13 @@ export function registerSkillsCli(program: Command) {
             ),
             logger: {
               info: (message) => defaultRuntime.log(message),
-              warn: (message) => defaultRuntime.log(theme.warn(message)),
+              warn: (message) => defaultRuntime.log(formatSkillWarning(message)),
             },
           });
           if (!result.ok) {
-            defaultRuntime.error(result.error);
+            if (!isClawHubSkillTrustCliFailure(result.code)) {
+              defaultRuntime.error(result.error);
+            }
             defaultRuntime.exit(1);
             return;
           }
@@ -496,14 +510,16 @@ export function registerSkillsCli(program: Command) {
             ),
             logger: {
               info: (message) => defaultRuntime.log(message),
-              warn: (message) => defaultRuntime.log(theme.warn(message)),
+              warn: (message) => defaultRuntime.log(formatSkillWarning(message)),
             },
           });
           let failed = false;
           for (const result of results) {
             if (!result.ok) {
               failed = true;
-              defaultRuntime.error(result.error);
+              if (!isClawHubSkillTrustCliFailure(result.code)) {
+                defaultRuntime.error(result.error);
+              }
               continue;
             }
             if (result.changed) {

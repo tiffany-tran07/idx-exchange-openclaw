@@ -18,7 +18,7 @@ import { parseClawHubPluginSpec } from "../infra/clawhub.js";
 import { formatErrorMessage } from "../infra/errors.js";
 import { type BundledPluginSource, findBundledPluginSource } from "../plugins/bundled-sources.js";
 import { buildClawHubPluginInstallRecordFields } from "../plugins/clawhub-install-records.js";
-import { installPluginFromClawHub } from "../plugins/clawhub.js";
+import { CLAWHUB_INSTALL_ERROR_CODE, installPluginFromClawHub } from "../plugins/clawhub.js";
 import { installPluginFromGitSpec, parseGitPluginSpec } from "../plugins/git-install.js";
 import { resolveDefaultPluginExtensionsDir } from "../plugins/install-paths.js";
 import type { InstallSafetyOverrides } from "../plugins/install-security-scan.js";
@@ -80,6 +80,13 @@ type ConfigSnapshotForInstallExecution = ConfigSnapshotForInstallPersist & {
   hookMutation: ConfigMutationPreflight;
   pluginMutation: ConfigMutationPreflight;
 };
+
+function isClawHubTrustCliFailure(code: string | undefined): boolean {
+  return (
+    code === CLAWHUB_INSTALL_ERROR_CODE.CLAWHUB_DOWNLOAD_BLOCKED ||
+    code === CLAWHUB_INSTALL_ERROR_CODE.CLAWHUB_RISK_ACKNOWLEDGEMENT_REQUIRED
+  );
+}
 
 function resolveInstallMode(force?: boolean): "install" | "update" {
   return force ? "update" : "install";
@@ -996,7 +1003,9 @@ export async function runPluginInstallCommand(params: {
       logger: createPluginInstallLogger(runtime),
     });
     if (!result.ok) {
-      runtime.error(result.error);
+      if (!isClawHubTrustCliFailure(result.code)) {
+        runtime.error(result.error);
+      }
       return runtime.exit(1);
     }
 
@@ -1313,7 +1322,9 @@ export async function runPluginInstallCommand(params: {
       logger: createPluginInstallLogger(runtime),
     });
     if (!result.ok) {
-      runtime.error(result.error);
+      if (!isClawHubTrustCliFailure(result.code)) {
+        runtime.error(result.error);
+      }
       return runtime.exit(1);
     }
 

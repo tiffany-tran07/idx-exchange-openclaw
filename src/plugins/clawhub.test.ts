@@ -451,12 +451,15 @@ describe("installPluginFromClawHub", () => {
 
     const failure = expectInstallFailure(result);
     expect(failure.code).toBe(CLAWHUB_INSTALL_ERROR_CODE.CLAWHUB_DOWNLOAD_BLOCKED);
-    expect(failure.error).toContain('ClawHub release "demo@2026.3.22" cannot be installed');
+    expect(failure.error).toBe("ClawHub blocked this release; install was not started.");
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("BLOCKED"));
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining("ClawHub flagged this release as malicious"),
     );
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("Security scan: malicious"));
+    const warning = logger.warn.mock.calls[0]?.[0] ?? "";
+    expect(warning).toContain("• Security scan   malicious");
+    expect(warning).toContain("• Moderation      quarantined");
+    expect(warning).toContain("• Finding         manual_moderation");
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("manual_moderation"));
     expect(downloadClawHubPackageArchiveMock).not.toHaveBeenCalled();
     expect(installPluginFromArchiveMock).not.toHaveBeenCalled();
@@ -491,7 +494,7 @@ describe("installPluginFromClawHub", () => {
     expect(failure.code).toBe(CLAWHUB_INSTALL_ERROR_CODE.CLAWHUB_DOWNLOAD_BLOCKED);
     expect(failure.warning).toContain("BLOCKED - ClawHub blocked this release");
     expect(failure.warning).not.toContain("flagged this release as malicious");
-    expect(failure.warning).toContain("Security scan: clean");
+    expect(failure.warning).toContain("Security scan   clean");
     expect(failure.warning).toContain("Download disabled by ClawHub for this release");
     expect(downloadClawHubPackageArchiveMock).not.toHaveBeenCalled();
     expect(installPluginFromArchiveMock).not.toHaveBeenCalled();
@@ -525,7 +528,7 @@ describe("installPluginFromClawHub", () => {
     const failure = expectInstallFailure(result);
     expect(failure.code).toBe(CLAWHUB_INSTALL_ERROR_CODE.CLAWHUB_RISK_ACKNOWLEDGEMENT_REQUIRED);
     expect(failure.warning).toContain("REVIEW REQUIRED");
-    expect(failure.warning).toContain("Security scan: not-run");
+    expect(failure.warning).toContain("Security scan   not-run");
     expect(failure.warning).toContain("A plugin can execute code on this machine");
     expect(failure.warning).toContain("before installing");
     expect(failure.warning).not.toContain("blockedFromDownload=false");
@@ -911,7 +914,7 @@ describe("installPluginFromClawHub", () => {
     const failure = expectInstallFailure(result);
     expect(failure.code).toBe(CLAWHUB_INSTALL_ERROR_CODE.CLAWHUB_RISK_ACKNOWLEDGEMENT_REQUIRED);
     expect(failure.warning).toContain("REVIEW REQUIRED");
-    expect(failure.warning).toContain("Security scan: pending");
+    expect(failure.warning).toContain("Security scan   pending");
     expect(failure.warning).toContain("scan pending");
     expect(failure.warning).not.toContain("blockedFromDownload=false");
     expect(downloadClawHubPackageArchiveMock).not.toHaveBeenCalled();

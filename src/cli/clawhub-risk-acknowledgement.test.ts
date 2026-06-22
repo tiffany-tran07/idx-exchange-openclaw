@@ -93,7 +93,7 @@ describe("resolveClawHubRiskAcknowledgementCliOptions", () => {
     });
 
     const prompt = promptTextMock.mock.calls[0]?.[0];
-    expect(prompt).toContain('"demo\\npkg@1.2.3"');
+    expect(prompt).toContain("type: 'demo\\npkg' to install anyway");
     expect(prompt).not.toContain("demo\npkg");
     expect(prompt).not.toContain("\u001b");
   });
@@ -127,7 +127,7 @@ describe("resolveClawHubRiskAcknowledgementCliOptions", () => {
     ).resolves.toBe(true);
 
     expect(promptTextMock).toHaveBeenCalledWith(
-      expect.stringContaining("To install anyway, type the package name"),
+      expect.stringContaining("type: 'demo' to install anyway"),
     );
     expect(promptYesNoMock).not.toHaveBeenCalled();
   });

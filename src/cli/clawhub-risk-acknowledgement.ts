@@ -26,7 +26,7 @@ export function resolveClawHubRiskAcknowledgementCliOptions(params: {
             const releaseLabel = `${packageName}@${sanitizeTerminalText(request.version)}`;
             if (request.acknowledgementKind === "type-package") {
               const answer = await promptText(
-                `To ${params.action === "installing" ? "install" : "update"} anyway, type the package name for "${releaseLabel}":\n  ${packageName}\n> `,
+                `type: '${packageName}' to ${params.action === "installing" ? "install" : "update"} anyway\n> `,
               );
               return answer.trim() === packageName;
             }

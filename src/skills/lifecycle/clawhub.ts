@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { OpenClawConfig } from "../../config/types.openclaw.js";
 import {
+  type ClawHubTrustErrorCode,
   ensureClawHubPackageTrustAcknowledged,
   type ClawHubRiskAcknowledgementRequest,
 } from "../../infra/clawhub-install-trust.js";
@@ -144,7 +145,7 @@ type InstallClawHubSkillResult =
       targetDir: string;
       detail?: ClawHubSkillDetail;
     }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: ClawHubTrustErrorCode };
 
 type UpdateClawHubSkillResult =
   | {
@@ -155,7 +156,7 @@ type UpdateClawHubSkillResult =
       changed: boolean;
       targetDir: string;
     }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: ClawHubTrustErrorCode };
 
 type Logger = {
   info?: (message: string) => void;
@@ -1216,7 +1217,7 @@ async function ensureClawHubSkillTrustAcknowledged(
   params: ClawHubInstallParams & {
     version: string;
   },
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true } | { ok: false; error: string; code?: ClawHubTrustErrorCode }> {
   const result = await ensureClawHubPackageTrustAcknowledged({
     subject: {
       kind: "skill",
@@ -1230,7 +1231,13 @@ async function ensureClawHubSkillTrustAcknowledged(
     logger: params.logger,
     mode: params.force ? "update" : "install",
   });
-  return result.ok ? { ok: true } : { ok: false, error: result.error };
+  return result.ok
+    ? { ok: true }
+    : {
+        ok: false,
+        error: result.error,
+        ...(result.code ? { code: result.code } : {}),
+      };
 }
 
 async function performClawHubSkillInstall(

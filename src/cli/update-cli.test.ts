@@ -1914,7 +1914,7 @@ describe("update-cli", () => {
         switchedToNpm: [],
         warnings: [trustWarning],
         errors: [
-          "Failed to update demo: ClawHub release risk was not acknowledged (ClawHub clawhub:demo@1.2.4).",
+          "Failed to update demo: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. (ClawHub clawhub:demo@1.2.4).",
         ],
       },
     });
@@ -1926,7 +1926,7 @@ describe("update-cli", () => {
     expect(jsonOutput?.postUpdate?.plugins?.status).toBe("warning");
     expect(jsonOutput?.postUpdate?.plugins?.sync.warnings).toEqual([trustWarning]);
     expect(jsonOutput?.postUpdate?.plugins?.sync.errors).toEqual([
-      "Failed to update demo: ClawHub release risk was not acknowledged (ClawHub clawhub:demo@1.2.4).",
+      "Failed to update demo: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. (ClawHub clawhub:demo@1.2.4).",
     ]);
   });
 
@@ -1947,7 +1947,7 @@ describe("update-cli", () => {
             switchedToNpm: [],
             warnings: [trustWarning],
             errors: [
-              "Failed to update demo: ClawHub release risk was not acknowledged (ClawHub clawhub:demo@1.2.4).",
+              "Failed to update demo: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. (ClawHub clawhub:demo@1.2.4).",
             ],
           },
         };
@@ -1978,7 +1978,7 @@ describe("update-cli", () => {
               status: "skipped",
               warning: trustWarning,
               message:
-                'Skipped demo ClawHub update: ClawHub release "demo@1.2.4" was not installed because the risk was not acknowledged. Review the warning above; to continue anyway, rerun with --acknowledge-clawhub-risk. Existing installed plugin left unchanged.',
+                "Skipped demo ClawHub update: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. Existing installed plugin left unchanged.",
             },
           ],
         };
@@ -2126,7 +2126,7 @@ describe("update-cli", () => {
           status: "skipped",
           warning: trustWarning,
           message:
-            'Skipped demo ClawHub update: ClawHub release "demo@1.2.4" was not installed because the risk was not acknowledged. Review the warning above; to continue anyway, rerun with --acknowledge-clawhub-risk. Existing installed plugin left unchanged.',
+            "Skipped demo ClawHub update: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. Existing installed plugin left unchanged.",
         },
       ],
     });
@@ -2163,7 +2163,7 @@ describe("update-cli", () => {
           code: "clawhub_download_blocked",
           warning: trustWarning,
           message:
-            'Skipped demo ClawHub update: ClawHub release "demo@1.2.4" cannot be installed because ClawHub flagged it as blocked or malicious. Review the security details above or choose a different version. Existing installed plugin left unchanged.',
+            "Skipped demo ClawHub update: ClawHub blocked this release; update was not started. Existing installed plugin left unchanged.",
         },
       ],
     });
@@ -2175,7 +2175,7 @@ describe("update-cli", () => {
     expect(jsonOutput?.postUpdate?.plugins?.status).toBe("warning");
     expect(pluginWarning(jsonOutput)?.pluginId).toBe("demo");
     expect(pluginWarning(jsonOutput)?.reason).toContain("Security scan: malicious");
-    expect(pluginWarning(jsonOutput)?.reason).toContain("blocked or malicious");
+    expect(pluginWarning(jsonOutput)?.reason).toContain("ClawHub blocked this release");
     expect(pluginOutcome(jsonOutput)?.pluginId).toBe("demo");
     expect(pluginOutcome(jsonOutput)?.status).toBe("skipped");
     expect(pluginOutcome(jsonOutput)?.message).toContain("Run openclaw update repair");
@@ -2221,7 +2221,7 @@ describe("update-cli", () => {
           pluginId: "demo",
           status: "skipped",
           message:
-            'Skipped demo ClawHub update: ClawHub release "demo@1.2.4" was not installed because the risk was not acknowledged. Review the warning above; to continue anyway, rerun with --acknowledge-clawhub-risk. Existing installed plugin left unchanged.',
+            "Skipped demo ClawHub update: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. Existing installed plugin left unchanged.",
         },
       ],
     });

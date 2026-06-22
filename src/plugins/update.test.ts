@@ -2484,7 +2484,7 @@ describe("updateNpmInstalledPlugins", () => {
       ok: false,
       code: "clawhub_risk_acknowledgement_required",
       error:
-        'ClawHub release "demo@1.2.4" was not installed because the risk was not acknowledged. Review the warning above; to continue anyway, rerun with --acknowledge-clawhub-risk.',
+        "Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning.",
       warning:
         "╭─ REVIEW REQUIRED - ClawHub flagged this release for security review ─╮\n│ • Finding: suspicious payload strings │\n╰───────────────────────────────────────────────────────────────────────╯",
     });
@@ -2538,7 +2538,7 @@ describe("updateNpmInstalledPlugins", () => {
         warning:
           "╭─ REVIEW REQUIRED - ClawHub flagged this release for security review ─╮\n│ • Finding: suspicious payload strings │\n╰───────────────────────────────────────────────────────────────────────╯",
         message:
-          'Skipped demo ClawHub update: ClawHub release "demo@1.2.4" was not installed because the risk was not acknowledged. Review the warning above; to continue anyway, rerun with --acknowledge-clawhub-risk. Existing installed plugin left unchanged.',
+          "Skipped demo ClawHub update: Update cancelled; rerun with --acknowledge-clawhub-risk to continue after reviewing the warning. Existing installed plugin left unchanged.",
       },
     ]);
   });
@@ -2548,8 +2548,7 @@ describe("updateNpmInstalledPlugins", () => {
       ok: false,
       code: "clawhub_download_blocked",
       version: "1.2.4",
-      error:
-        'ClawHub release "demo@1.2.4" cannot be installed because ClawHub flagged it as blocked or malicious. Review the security details above or choose a different version.',
+      error: "ClawHub blocked this release; update was not started.",
       warning:
         "╭─ BLOCKED - ClawHub flagged this release as malicious ─╮\n│ • Security scan: malicious │\n╰────────────────────────────────────────────────────────╯",
     });
@@ -2603,7 +2602,7 @@ describe("updateNpmInstalledPlugins", () => {
         warning:
           "╭─ BLOCKED - ClawHub flagged this release as malicious ─╮\n│ • Security scan: malicious │\n╰────────────────────────────────────────────────────────╯",
         message:
-          'Skipped demo ClawHub update: ClawHub release "demo@1.2.4" cannot be installed because ClawHub flagged it as blocked or malicious. Review the security details above or choose a different version. Existing installed plugin left unchanged.',
+          "Skipped demo ClawHub update: ClawHub blocked this release; update was not started. Existing installed plugin left unchanged.",
       },
     ]);
   });
@@ -2736,8 +2735,7 @@ describe("updateNpmInstalledPlugins", () => {
       ok: false,
       code: "clawhub_download_blocked",
       version: "1.2.3",
-      error:
-        'ClawHub release "demo@1.2.3" cannot be installed because ClawHub flagged it as blocked or malicious. Review the security details above or choose a different version.',
+      error: "ClawHub blocked this release; update was not started.",
       warning:
         "╭─ BLOCKED - ClawHub flagged this release as malicious ─╮\n│ • Security scan: malicious │\n╰────────────────────────────────────────────────────────╯",
     });
@@ -2784,7 +2782,7 @@ describe("updateNpmInstalledPlugins", () => {
       memory: "memory-core",
     });
     const message =
-      'Disabled "demo" after plugin update failure; OpenClaw will continue without it. Failed to update demo: ClawHub release "demo@1.2.3" cannot be installed because ClawHub flagged it as blocked or malicious. Review the security details above or choose a different version. (ClawHub clawhub:demo).';
+      'Disabled "demo" after plugin update failure; OpenClaw will continue without it. Failed to update demo: ClawHub blocked this release; update was not started. (ClawHub clawhub:demo).';
     expect(warn).toHaveBeenCalledWith(message);
     expect(result.outcomes).toEqual([
       {

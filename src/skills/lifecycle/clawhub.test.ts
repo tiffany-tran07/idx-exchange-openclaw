@@ -369,9 +369,8 @@ describe("skills-clawhub", () => {
     if (result.ok) {
       throw new Error("expected malicious skill install failure");
     }
-    expect(result.error).toContain(
-      'ClawHub release "@acme/agentreceipt@1.0.0" cannot be installed',
-    );
+    expect(result.error).toBe("ClawHub blocked this release; install was not started.");
+    expect(result.code).toBe("clawhub_download_blocked");
     expect(warnings.join("\n")).toContain("BLOCKED - ClawHub flagged this release as malicious");
     expect(warnings.join("\n")).toContain("OpenClaw will not install this skill release");
     expect(downloadClawHubSkillArchiveUrlMock).not.toHaveBeenCalled();
@@ -451,7 +450,8 @@ describe("skills-clawhub", () => {
     if (result.ok) {
       throw new Error("expected moderation-blocked skill install failure");
     }
-    expect(result.error).toContain('ClawHub release "agentreceipt@1.0.0" cannot be installed');
+    expect(result.error).toBe("ClawHub blocked this release; install was not started.");
+    expect(result.code).toBe("clawhub_download_blocked");
     expect(warnings.join("\n")).toContain("BLOCKED - ClawHub blocked this release");
     expect(downloadClawHubSkillArchiveUrlMock).not.toHaveBeenCalled();
   });
