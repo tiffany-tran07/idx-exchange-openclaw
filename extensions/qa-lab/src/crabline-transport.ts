@@ -6,7 +6,6 @@ import {
   CRABLINE_FAKE_PROVIDER_CHANNELS,
   OPENCLAW_CRABLINE_MANIFEST_PATH,
   startOpenClawCrablineAdapter,
-  type StartedOpenClawCrablineAdapter,
 } from "@openclaw/crabline";
 import type { OpenClawConfig } from "openclaw/plugin-sdk/config-contracts";
 import { formatErrorMessage } from "openclaw/plugin-sdk/error-runtime";
