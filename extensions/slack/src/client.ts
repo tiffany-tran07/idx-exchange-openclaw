@@ -1,16 +1,22 @@
 // Slack plugin module implements client behavior.
 import { createHash } from "node:crypto";
 import { type WebClientOptions, WebClient } from "@slack/web-api";
-import { resolveSlackWebClientOptions, resolveSlackWriteClientOptions } from "./client-options.js";
+import {
+  resolveSlackWebClientOptions,
+  resolveSlackWriteClientOptions,
+  type SlackApiUrlClientOptions,
+} from "./client-options.js";
 
 const SLACK_WRITE_CLIENT_CACHE_MAX = 32;
 const slackWriteClientCache = new Map<string, WebClient>();
 
-export type SlackWriteClientCacheOptions = Pick<WebClientOptions, "slackApiUrl">;
+export type SlackWriteClientCacheOptions = SlackApiUrlClientOptions;
 
 export {
+  createSlackApiUrlClientOptions,
   resolveSlackWebClientOptions,
   resolveSlackWriteClientOptions,
+  type SlackApiUrlClientOptions,
   SLACK_DEFAULT_RETRY_OPTIONS,
   SLACK_WRITE_RETRY_OPTIONS,
 } from "./client-options.js";

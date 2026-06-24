@@ -4,6 +4,7 @@ import {
   normalizeLowercaseStringOrEmpty,
   normalizeOptionalString,
 } from "openclaw/plugin-sdk/string-coerce-runtime";
+import { createSlackApiUrlClientOptions, type SlackApiUrlClientOptions } from "./client-options.js";
 import { createSlackWebClient } from "./client.js";
 import {
   collectSlackCursorItems,
@@ -153,8 +154,11 @@ export async function resolveSlackUserAllowlist(params: {
   token: string;
   entries: string[];
   client?: WebClient;
+  slackApiUrl?: SlackApiUrlClientOptions["slackApiUrl"];
 }): Promise<SlackUserResolution[]> {
-  const client = params.client ?? createSlackWebClient(params.token);
+  const client =
+    params.client ??
+    createSlackWebClient(params.token, createSlackApiUrlClientOptions(params.slackApiUrl));
   const users = await listSlackUsers(client);
   return resolveSlackAllowlistEntries<
     { id?: string; name?: string; email?: string },

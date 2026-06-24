@@ -1,0 +1,45 @@
+// Qa Lab plugin module defines Crabline provider runtime extension points.
+import type { StartedOpenClawCrablineAdapter } from "@openclaw/crabline";
+import type { QaTransportGatewayConfig } from "../qa-transport.js";
+
+export type QaCrablineProviderChannel = "slack" | "telegram" | "whatsapp";
+
+export type QaCrablineChannelDriverSelection = {
+  capabilityMatrixPath: "crabline-fake-provider-capabilities.json";
+  channel: QaCrablineProviderChannel;
+  channelDriver: "crabline";
+  smokeArtifactPath: "crabline-fake-provider-smoke.json";
+};
+
+export type QaCrablineManifest = {
+  accessToken?: string;
+  adminToken?: string;
+  endpoints: {
+    adminInboundUrl: string;
+    apiRoot: string;
+  };
+  provider: string;
+  recorderPath: string;
+  selfJid?: string;
+};
+
+export type QaStartedOpenClawCrablineAdapter = Omit<
+  StartedOpenClawCrablineAdapter,
+  "channel" | "manifest"
+> & {
+  channel: QaCrablineProviderChannel;
+  manifest: QaCrablineManifest;
+};
+
+export type QaCrablineProviderRuntimeSetup = {
+  augmentGatewayConfig(config: QaTransportGatewayConfig): QaTransportGatewayConfig;
+  createRuntimeEnvPatch(): NodeJS.ProcessEnv;
+};
+
+export type QaCrablineProviderRuntime = {
+  channel: QaCrablineProviderChannel;
+  setup(params: {
+    adapter: QaStartedOpenClawCrablineAdapter;
+    outputDir: string;
+  }): Promise<QaCrablineProviderRuntimeSetup>;
+};

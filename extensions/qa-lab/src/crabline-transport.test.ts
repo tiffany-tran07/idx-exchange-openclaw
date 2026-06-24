@@ -91,11 +91,11 @@ describe("crabline transport", () => {
                 enabled: true,
                 mode: "http",
                 signingSecret: "crabline-slack-signing-secret",
+                apiUrl: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/api\/$/u),
               },
             },
           });
           expect(transport.createRuntimeEnvPatch?.()).toMatchObject({
-            OPENCLAW_SLACK_API_URL: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/api\/$/u),
             SLACK_BOT_TOKEN: "xoxb-crabline-slack-token",
             SLACK_SIGNING_SECRET: "crabline-slack-signing-secret",
           });
@@ -142,7 +142,8 @@ describe("crabline transport", () => {
               },
             },
           });
-          expect(transport.createRuntimeEnvPatch?.()).toMatchObject({
+          const runtimeEnvPatch = transport.createRuntimeEnvPatch?.() ?? {};
+          expect(runtimeEnvPatch).toMatchObject({
             NODE_OPTIONS: expect.stringContaining("--import=file://"),
             OPENCLAW_WHATSAPP_FAKE_PROVIDER_ACCESS_TOKEN: "crabline-whatsapp-access-token",
             OPENCLAW_WHATSAPP_FAKE_PROVIDER_ACCOUNT_ID: "default",
@@ -151,6 +152,7 @@ describe("crabline transport", () => {
             ),
             OPENCLAW_WHATSAPP_FAKE_PROVIDER_SELF_JID: "15550000000@s.whatsapp.net",
           });
+          expect(runtimeEnvPatch).not.toHaveProperty("CRABLINE_WHATSAPP_ADMIN_TOKEN");
           await expect(
             fs.readFile(
               path.join(outputDir, "artifacts", "crabline", "whatsapp-auth", "creds.json"),
@@ -163,6 +165,12 @@ describe("crabline transport", () => {
               "utf8",
             ),
           ).resolves.toContain("createWhatsAppBaileysMockSocket");
+          await expect(
+            fs.readFile(
+              path.join(outputDir, "artifacts", "crabline", "whatsapp-preload.mjs"),
+              "utf8",
+            ),
+          ).resolves.toContain("registerWhatsAppConnectionController");
 
           const manifest = JSON.parse(
             await fs.readFile(path.join(outputDir, OPENCLAW_CRABLINE_MANIFEST_PATH), "utf8"),

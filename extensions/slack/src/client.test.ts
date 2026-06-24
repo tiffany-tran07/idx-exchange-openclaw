@@ -106,28 +106,20 @@ describe("slack web client config", () => {
     expect(options.retryConfig).toBe(customRetry);
   });
 
-  it("uses OPENCLAW_SLACK_API_URL as the Slack Web API root", () => {
-    const previous = process.env.OPENCLAW_SLACK_API_URL;
-    process.env.OPENCLAW_SLACK_API_URL = "http://127.0.0.1:49152/api/";
-    try {
-      expect(resolveSlackWebClientOptions().slackApiUrl).toBe("http://127.0.0.1:49152/api/");
-      expect(resolveSlackWriteClientOptions().slackApiUrl).toBe("http://127.0.0.1:49152/api/");
-    } finally {
-      if (previous === undefined) {
-        delete process.env.OPENCLAW_SLACK_API_URL;
-      } else {
-        process.env.OPENCLAW_SLACK_API_URL = previous;
-      }
-    }
+  it("uses explicit Slack API URL as the Slack Web API root", () => {
+    expect(
+      resolveSlackWebClientOptions({ slackApiUrl: "http://127.0.0.1:49152/api/" }).slackApiUrl,
+    ).toBe("http://127.0.0.1:49152/api/");
+    expect(
+      resolveSlackWriteClientOptions({ slackApiUrl: "http://127.0.0.1:49152/api/" }).slackApiUrl,
+    ).toBe("http://127.0.0.1:49152/api/");
   });
 
-  it("prefers explicit Slack API URL over env", () => {
+  it("does not use process-wide Slack API URL overrides", () => {
     const previous = process.env.OPENCLAW_SLACK_API_URL;
     process.env.OPENCLAW_SLACK_API_URL = "http://127.0.0.1:49152/api/";
     try {
-      expect(
-        resolveSlackWebClientOptions({ slackApiUrl: "http://127.0.0.1:49153/api/" }).slackApiUrl,
-      ).toBe("http://127.0.0.1:49153/api/");
+      expect(resolveSlackWebClientOptions().slackApiUrl).toBeUndefined();
     } finally {
       if (previous === undefined) {
         delete process.env.OPENCLAW_SLACK_API_URL;

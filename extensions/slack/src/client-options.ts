@@ -3,6 +3,8 @@ import type { Agent } from "node:http";
 import type { RetryOptions, WebClientOptions } from "@slack/web-api";
 import { createNodeProxyAgent } from "openclaw/plugin-sdk/fetch-runtime";
 
+export type SlackApiUrlClientOptions = Pick<WebClientOptions, "slackApiUrl">;
+
 export const SLACK_DEFAULT_RETRY_OPTIONS: RetryOptions = {
   retries: 2,
   factor: 2,
@@ -14,8 +16,6 @@ export const SLACK_DEFAULT_RETRY_OPTIONS: RetryOptions = {
 export const SLACK_WRITE_RETRY_OPTIONS: RetryOptions = {
   retries: 0,
 };
-
-const SLACK_DEFAULT_API_URL = "https://slack.com/";
 
 /**
  * Build an HTTPS proxy agent from env vars (HTTPS_PROXY, HTTP_PROXY, etc.)
@@ -45,13 +45,18 @@ function resolveSlackProxyAgent(targetUrl: string): Agent | undefined {
 }
 
 function resolveSlackApiUrl(override?: string): string | undefined {
-  const value = override?.trim() || process.env.OPENCLAW_SLACK_API_URL?.trim();
+  const value = override?.trim();
   return value || undefined;
+}
+
+export function createSlackApiUrlClientOptions(apiUrl?: string | null): SlackApiUrlClientOptions {
+  const slackApiUrl = resolveSlackApiUrl(apiUrl ?? undefined);
+  return slackApiUrl ? { slackApiUrl } : {};
 }
 
 export function resolveSlackWebClientOptions(options: WebClientOptions = {}): WebClientOptions {
   const slackApiUrl = resolveSlackApiUrl(options.slackApiUrl);
-  const proxyTargetUrl = slackApiUrl ?? SLACK_DEFAULT_API_URL;
+  const proxyTargetUrl = slackApiUrl ?? "https://slack.com/";
   return {
     ...options,
     agent: options.agent ?? resolveSlackProxyAgent(proxyTargetUrl),
@@ -62,7 +67,7 @@ export function resolveSlackWebClientOptions(options: WebClientOptions = {}): We
 
 export function resolveSlackWriteClientOptions(options: WebClientOptions = {}): WebClientOptions {
   const slackApiUrl = resolveSlackApiUrl(options.slackApiUrl);
-  const proxyTargetUrl = slackApiUrl ?? SLACK_DEFAULT_API_URL;
+  const proxyTargetUrl = slackApiUrl ?? "https://slack.com/";
   return {
     ...options,
     agent: options.agent ?? resolveSlackProxyAgent(proxyTargetUrl),
