@@ -288,9 +288,8 @@ export async function monitorSlackProvider(opts: MonitorSlackOpts = {}) {
   const typingReaction = slackCfg.typingReaction?.trim() ?? "";
   const mediaMaxBytes = (opts.mediaMaxMb ?? slackCfg.mediaMaxMb ?? 20) * 1024 * 1024;
   const removeAckAfterReply = cfg.messages?.removeAckAfterReply ?? false;
-  const clientOptions = resolveSlackWebClientOptions(
-    createSlackApiUrlClientOptions(slackCfg.apiUrl),
-  );
+  const slackApiUrlClientOptions = createSlackApiUrlClientOptions(slackCfg.apiUrl);
+  const clientOptions = resolveSlackWebClientOptions(slackApiUrlClientOptions);
   const { app, receiver, socketModeLogger } = createSlackBoltApp({
     interop: await getSlackBoltInterop(),
     slackMode,
@@ -464,6 +463,7 @@ export async function monitorSlackProvider(opts: MonitorSlackOpts = {}) {
             const resolved = await resolveSlackChannelAllowlist({
               token: resolveToken,
               entries,
+              ...slackApiUrlClientOptions,
             });
             const nextChannels = { ...channelsConfig };
             const mapping: string[] = [];
@@ -509,6 +509,7 @@ export async function monitorSlackProvider(opts: MonitorSlackOpts = {}) {
             const resolvedUsers = await resolveSlackUserAllowlist({
               token: resolveToken,
               entries: allowEntries,
+              ...slackApiUrlClientOptions,
             });
             const { mapping, unresolved, additions } = buildAllowlistResolutionSummary(
               resolvedUsers,
@@ -555,6 +556,7 @@ export async function monitorSlackProvider(opts: MonitorSlackOpts = {}) {
               const resolvedUsers = await resolveSlackUserAllowlist({
                 token: resolveToken,
                 entries: Array.from(userEntries),
+                ...slackApiUrlClientOptions,
               });
               const { resolvedMap, mapping, unresolved } = buildAllowlistResolutionSummary(
                 resolvedUsers,

@@ -81,6 +81,13 @@ function resolveSlackActionClientOptions(opts: SlackActionClientOpts) {
   return createSlackApiUrlClientOptions(account.config.apiUrl);
 }
 
+function slackActionClientOptionArgs(
+  opts: SlackActionClientOpts,
+): [] | [ReturnType<typeof createSlackApiUrlClientOptions>] {
+  const clientOptions = resolveSlackActionClientOptions(opts);
+  return clientOptions.slackApiUrl ? [clientOptions] : [];
+}
+
 function normalizeEmoji(raw: string) {
   const trimmed = raw.trim();
   if (!trimmed) {
@@ -141,10 +148,10 @@ async function getClient(opts: SlackActionClientOpts = {}, mode: "read" | "write
     return opts.client;
   }
   const token = resolveToken(opts.token, opts.accountId, opts.cfg);
-  const clientOptions = resolveSlackActionClientOptions(opts);
+  const clientOptionArgs = slackActionClientOptionArgs(opts);
   return mode === "write"
-    ? getSlackWriteClient(token, clientOptions)
-    : createSlackWebClient(token, clientOptions);
+    ? getSlackWriteClient(token, ...clientOptionArgs)
+    : createSlackWebClient(token, ...clientOptionArgs);
 }
 
 async function resolveBotUserId(client: WebClient) {
