@@ -17,3 +17,13 @@ export async function getSoldComps(city: string, months = 12) {
 `;
   return query<SoldRow>(sql, [city, months]);
 }
+
+const city = process.argv[2];
+try {
+  const soldComps = await getSoldComps(city, 12);
+  console.log(JSON.stringify(soldComps));
+} catch (err) {
+  console.error("Failed to retrieve sold comps");
+} finally {
+  process.exit(0);
+}

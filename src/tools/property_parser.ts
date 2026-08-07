@@ -33,6 +33,12 @@ export async function parsePropertyQuery(query: string) {
   };
 }
 
-// const query = process.argv[2];
-// const result = await parsePropertyQuery(query);
-// console.log(JSON.stringify(result));
+const result = process.argv[2];
+try {
+  const property_features = await parsePropertyQuery(result);
+  console.log(JSON.stringify(property_features));
+} catch (err) {
+  console.error("Failed to parse property");
+} finally {
+  process.exit(0);
+}

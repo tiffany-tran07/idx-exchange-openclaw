@@ -1,10 +1,11 @@
 import path from "path";
+import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
 
 // Load .env from the directory containing this script (assuming it's in src/tools/)
 // or relative to the process working directory
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.env") });
 
 const pool = mysql.createPool({
   host: process.env.MYSQL_HOST || "localhost",
