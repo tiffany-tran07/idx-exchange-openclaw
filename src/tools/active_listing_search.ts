@@ -1,10 +1,6 @@
 import { query } from "./mySQL_connector.ts";
 
-export async function searchActiveListings(
-  filters: PropertyFilters,
-  page = 1,
-  limit = 10,
-) {
+export async function searchActiveListings(filters: PropertyFilters, page = 1, limit = 10) {
   const offset = (page - 1) * limit;
   let sql = `
      SELECT
