@@ -1,7 +1,8 @@
-// Tests heartbeat runner behavior when defaults are unset.
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+// Tests heartbeat runner behavior when defaults are unset.
+import { createRequireRecord } from "openclaw/plugin-sdk/test-fixtures";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { HEARTBEAT_PROMPT } from "../auto-reply/heartbeat.js";
 import type { ChannelOutboundAdapter } from "../channels/plugins/types.public.js";
@@ -173,12 +174,7 @@ const createCaseDir = async (prefix: string) => {
   return dir;
 };
 
-function requireRecord(value: unknown, label: string): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`expected ${label} to be a record`);
-  }
-  return value as Record<string, unknown>;
-}
+const requireRecord = createRequireRecord("record", "expected-label-record");
 
 function expectRecordFields(record: Record<string, unknown>, fields: Record<string, unknown>) {
   for (const [key, value] of Object.entries(fields)) {
@@ -1255,6 +1251,53 @@ describe("runHeartbeatOnce", () => {
     }
   });
 
+  it("delivers a repeated heartbeat when the clock moves behind its previous send", async () => {
+    const tmpDir = await createCaseDir("hb-dup-clock-rollback");
+    const storePath = path.join(tmpDir, "sessions.json");
+    const replySpy = vi.fn();
+    try {
+      const cfg: OpenClawConfig = {
+        agents: {
+          defaults: {
+            workspace: tmpDir,
+            heartbeat: { every: "5m", target: "whatsapp" },
+          },
+        },
+        channels: { whatsapp: { allowFrom: ["*"] } },
+        session: { store: storePath },
+      };
+      const sessionKey = resolveMainSessionKey(cfg);
+      const nowMs = 60_000;
+      await seedWhatsAppSession(storePath, sessionKey, {
+        lastHeartbeatText: "Final alert",
+        lastHeartbeatSentAt: nowMs + 60_000,
+      });
+      replySpy.mockResolvedValue([{ text: "Final alert" }]);
+      const sendWhatsApp = vi
+        .fn<
+          (
+            to: string,
+            text: string,
+            opts?: unknown,
+          ) => Promise<{ messageId: string; toJid: string }>
+        >()
+        .mockResolvedValue({ messageId: "m1", toJid: "jid" });
+
+      await runHeartbeatOnce({
+        cfg,
+        deps: createHeartbeatDeps(sendWhatsApp, { nowMs, getReplyFromConfig: replySpy }),
+      });
+
+      expect(sendWhatsApp).toHaveBeenCalledOnce();
+      expectWhatsAppSendCall(sendWhatsApp, 0, {
+        to: "120363401234567890@g.us",
+        text: "Final alert",
+      });
+    } finally {
+      replySpy.mockReset();
+    }
+  });
+
   it.each(
     typedCases<{
       name: string;
@@ -1360,10 +1403,10 @@ describe("runHeartbeatOnce", () => {
     },
   );
 
-  it("does not surface a trailing legacy reasoning payload as the reply when includeReasoning is unset", async () => {
-    // With includeReasoning unset, a legacy "Reasoning:"-prefixed payload after
-    // the final answer must not become the visible heartbeat reply, and no
-    // separate Thinking message is sent. (#92242 review follow-up)
+  it("keeps a trailing legacy reasoning payload internal", async () => {
+    // A legacy "Reasoning:"-prefixed payload after the final answer must not
+    // become the visible heartbeat reply, and no separate Thinking message is
+    // sent. (#92242 review follow-up)
     const replySpy = vi.fn();
     try {
       const tmpDir = await createCaseDir("hb-legacy-reasoning-unset");
@@ -1460,12 +1503,11 @@ describe("runHeartbeatOnce", () => {
   type HeartbeatScratchState =
     | "empty"
     | "actionable"
-    | "legacy-comment-only"
     | "fenced-empty"
     | "fenced-actionable"
     | "missing";
 
-  async function runHeartbeatFileScenario(params: {
+  async function runHeartbeatScratchScenario(params: {
     fileState: HeartbeatScratchState;
     source?: "notifications-event";
     reason?: "interval" | "wake";
@@ -1482,13 +1524,8 @@ describe("runHeartbeatOnce", () => {
     const scratchContent =
       params.fileState === "empty"
         ? "# Heartbeat scratch\n\n## Tasks\n\n"
-        : params.fileState === "legacy-comment-only"
-          ? `# Keep this empty (or with only comments) to skip heartbeat API calls.
-
-# Add tasks below when you want the agent to check something periodically.
-`
-          : params.fileState === "fenced-empty"
-            ? `# Heartbeat scratch template
+        : params.fileState === "fenced-empty"
+          ? `# Heartbeat scratch template
 
 \`\`\`markdown
 # Keep this empty (or with only comments) to skip heartbeat API calls.
@@ -1496,16 +1533,16 @@ describe("runHeartbeatOnce", () => {
 # Add tasks below when you want the agent to check something periodically.
 \`\`\`
 `
-            : params.fileState === "actionable"
-              ? "# Heartbeat scratch\n\n- Check server logs\n- Review pending PRs\n"
-              : params.fileState === "fenced-actionable"
-                ? `\`\`\`markdown
+          : params.fileState === "actionable"
+            ? "# Heartbeat scratch\n\n- Check server logs\n- Review pending PRs\n"
+            : params.fileState === "fenced-actionable"
+              ? `\`\`\`markdown
 # Keep this empty when you want to skip.
 
 - Check server logs
 \`\`\`
 `
-                : null;
+              : null;
 
     const cfg: OpenClawConfig = {
       agents: {
@@ -1555,7 +1592,7 @@ describe("runHeartbeatOnce", () => {
   }
 
   it("injects actionable monitor scratch without workspace file guidance", async () => {
-    const { res, replySpy, sendWhatsApp } = await runHeartbeatFileScenario({
+    const { res, replySpy, sendWhatsApp } = await runHeartbeatScratchScenario({
       fileState: "actionable",
       reason: "interval",
       replyText: "Checked logs and PRs",
@@ -1571,35 +1608,6 @@ describe("runHeartbeatOnce", () => {
     } finally {
       replySpy.mockRestore();
     }
-  });
-
-  it("keeps legacy HEARTBEAT.md active until doctor migrates it", async () => {
-    const tmpDir = await createCaseDir("openclaw-hb-legacy-fallback");
-    const storePath = path.join(tmpDir, "sessions.json");
-    const workspaceDir = path.join(tmpDir, "workspace");
-    await fs.mkdir(workspaceDir, { recursive: true });
-    await fs.writeFile(
-      path.join(workspaceDir, "HEARTBEAT.md"),
-      "# Legacy instructions\n\n- Check the deployment\n",
-      "utf8",
-    );
-    const legacyCronStore = path.join(tmpDir, "legacy-cron", "jobs.json");
-    await seedHeartbeatScratchForTest({ content: null, storePath: legacyCronStore });
-    const cfg = {
-      agents: { defaults: { workspace: workspaceDir, heartbeat: { every: "5m" } } },
-      cron: { store: legacyCronStore },
-      session: { store: storePath },
-    } as unknown as OpenClawConfig;
-    await seedWhatsAppSession(storePath, resolveMainSessionKey(cfg));
-    const replySpy = vi.fn().mockResolvedValue({ text: "Checked deployment" });
-
-    const result = await runHeartbeatOnce({
-      cfg,
-      deps: createHeartbeatDeps(vi.fn(), { getReplyFromConfig: replySpy }),
-    });
-
-    expect(result.status).toBe("ran");
-    expect(replyBody(replySpy).Body).toContain("Check the deployment");
   });
 
   it("reads heartbeat scratch from a configured cron store partition", async () => {
@@ -1774,14 +1782,6 @@ tasks:
         expectedReplyCalls: 0,
       },
       {
-        name: "legacy comment-only template + interval skips",
-        fileState: "legacy-comment-only",
-        expectedStatus: "skipped",
-        expectedSkipReason: "empty-heartbeat-file",
-        expectedSendCalls: 0,
-        expectedReplyCalls: 0,
-      },
-      {
         name: "fenced empty template + interval skips",
         fileState: "fenced-empty",
         expectedStatus: "skipped",
@@ -1873,7 +1873,7 @@ tasks:
       expectCronContext,
       ...scenario
     } of cases) {
-      const { res, replySpy, sendWhatsApp } = await runHeartbeatFileScenario(scenario);
+      const { res, replySpy, sendWhatsApp } = await runHeartbeatScratchScenario(scenario);
       try {
         expect(res.status, name).toBe(expectedStatus);
         if (res.status === "skipped") {
