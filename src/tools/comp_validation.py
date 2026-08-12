@@ -1,4 +1,5 @@
 # Check if recommended price is supported by recent comps
+import sys
 def validate_with_comps(city: str, sqft: int, price: int) -> dict:
     sql = """
         SELECT
@@ -16,5 +17,16 @@ def validate_with_comps(city: str, sqft: int, price: int) -> dict:
         "comp_price": round(comp_price),
         "list_price": price,
         "comp_count": result[0]["comp_count"],
-        "delta_pct": round((price - comp_price) / comp_price * 100, 1)
+        "delta_pct": (
+            round((price - comp_price) / comp_price * 100, 1)
+            if comp_price > 0
+            else None
+        )
     }
+
+if __name__ == "__main__":
+    city = sys.argv[1]
+    sqft = int(sys.argv[2])
+    price = int(sys.argv[3])
+    comps = validate_with_comps(city, sqft, price)
+    print(comps)

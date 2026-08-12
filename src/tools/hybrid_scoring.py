@@ -28,3 +28,6 @@ def calculate_similarity_score(
     )[0][0]
     score += sem_sim * 40
     return round(score, 2)
+
+if __name__ == "__main__":
+    calculate_similarity_score()
