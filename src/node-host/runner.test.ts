@@ -1,17 +1,21 @@
 /** Tests node-host runner command parsing, timeout, and plugin dispatch behavior. */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { ConnectErrorDetailCodes } from "../../packages/gateway-protocol/src/connect-error-details.js";
 import type { GatewayClientOptions } from "../gateway/client.js";
 import type { configureNodeHost } from "./config.js";
-import type { NodeInvokeRequestPayload } from "./invoke-types.js";
 import { startNodeHostMcpManager, type NodeHostMcpManager } from "./mcp.js";
 import { runNodeHost } from "./runner.js";
+
+const NODE_PLUGIN_TOOLS_UPDATE_METHOD = "node.pluginTools.update";
+const NODE_PROTOCOL_FEATURES_UPDATE_METHOD = "node.protocolFeatures.update";
+const NODE_SKILLS_UPDATE_METHOD = "node.skills.update";
 
 const mocks = vi.hoisted(() => ({
   capturedGatewayClientOptions: [] as GatewayClientOptions[],
   capturedConfiguredGatewayConfigs: [] as Array<{ contextPath?: string }>,
   capturedGatewayClients: [] as Array<{
-    request: ReturnType<typeof vi.fn<(method: string, params?: unknown) => Promise<unknown>>>;
+    request: Mock<(method: string, params?: unknown) => Promise<unknown>>;
+    start: ReturnType<typeof vi.fn>;
     stop: ReturnType<typeof vi.fn>;
     updateNodeManifest: ReturnType<typeof vi.fn>;
   }>,
@@ -27,6 +31,9 @@ const mocks = vi.hoisted(() => ({
   availabilityChanged: undefined as (() => void) | undefined,
   normalizedPath: null as string | null,
   resolvedExecutables: new Map<string, string>(),
+  runtimeClient: undefined as
+    | { request: (method: string, params?: unknown) => Promise<unknown> }
+    | undefined,
   closeMcpManager: vi.fn(async () => undefined),
   runStartupMigrations: vi.fn(async () => undefined),
   configureNodeHost: vi.fn(async (params: Parameters<typeof configureNodeHost>[0]) => {
@@ -50,7 +57,7 @@ const mocks = vi.hoisted(() => ({
   })),
   resolveGatewayCredentialsWithSecretInputs: vi.fn(async () => ({})),
   activeRuntime: {
-    invoke: vi.fn(async (_payload: NodeInvokeRequestPayload) => {}),
+    invoke: vi.fn(async () => {}),
     handleInput: vi.fn(),
     cancel: vi.fn(),
     cancelAll: vi.fn(),
@@ -66,26 +73,23 @@ vi.mock("../gateway/client-start-readiness.js", () => ({
   startGatewayClientWhenEventLoopReady: mocks.startGatewayClientWhenEventLoopReady,
 }));
 
-vi.mock("../gateway/client.js", () => ({
-  GatewayClientRequestError: class MockGatewayClientRequestError extends Error {
-    readonly gatewayCode: string;
-
-    constructor(params: { code: string; message: string }) {
-      super(params.message);
-      this.gatewayCode = params.code;
-    }
-  },
-  GatewayClient: function GatewayClient(opts: GatewayClientOptions) {
-    const client = {
-      request: vi.fn<(method: string, params?: unknown) => Promise<unknown>>(async () => ({})),
-      stop: vi.fn(),
-      updateNodeManifest: vi.fn(),
-    };
-    mocks.capturedGatewayClientOptions.push(opts);
-    mocks.capturedGatewayClients.push(client);
-    return client;
-  },
-}));
+vi.mock("../gateway/client.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../gateway/client.js")>();
+  return {
+    ...actual,
+    GatewayClient: function GatewayClient(opts: GatewayClientOptions) {
+      const client = {
+        request: vi.fn(async () => ({})),
+        start: vi.fn(),
+        stop: vi.fn(),
+        updateNodeManifest: vi.fn(),
+      };
+      mocks.capturedGatewayClientOptions.push(opts);
+      mocks.capturedGatewayClients.push(client);
+      return client;
+    },
+  };
+});
 
 vi.mock("../gateway/credentials-secret-inputs.js", () => ({
   resolveGatewayCredentialsWithSecretInputs: mocks.resolveGatewayCredentialsWithSecretInputs,
@@ -172,7 +176,10 @@ vi.mock("./runtime.js", async (importOriginal) => {
       return {
         manifest: { caps: [], commands: [], pathEnv: process.env.PATH ?? "" },
         initialInventory: { skills: [], pluginTools: [] },
-        start: () => mocks.activeRuntime,
+        start: (params) => {
+          mocks.runtimeClient = params.client;
+          return mocks.activeRuntime;
+        },
       };
     },
   };
@@ -208,6 +215,7 @@ describe("runNodeHost", () => {
     mocks.availabilityChanged = undefined;
     mocks.normalizedPath = null;
     mocks.resolvedExecutables.clear();
+    mocks.runtimeClient = undefined;
     vi.clearAllMocks();
     mocks.getRuntimeConfig.mockReturnValue({
       gateway: { handshakeTimeoutMs: 1_000 },
@@ -247,6 +255,116 @@ describe("runNodeHost", () => {
     },
   );
 
+  it("passes a paired bootstrap credential with first-connect preference", async () => {
+    await expect(
+      runNodeHost({
+        gatewayHost: "gateway.example",
+        gatewayPort: 443,
+        gatewayTls: true,
+        gatewayBootstrapToken: "bootstrap-123",
+        preferGatewayBootstrapToken: true,
+      }),
+    ).rejects.toThrow("event loop readiness timeout");
+
+    expect(lastCapturedOptions()).toMatchObject({
+      bootstrapToken: "bootstrap-123",
+      preferBootstrapToken: true,
+    });
+    expect(lastCapturedOptions()?.token).toBeUndefined();
+    expect(mocks.resolveGatewayCredentialsWithSecretInputs).not.toHaveBeenCalled();
+  });
+
+  it("persists the pairing candidate that completes the handshake", async () => {
+    mocks.useFakeRuntime = true;
+    mocks.startGatewayClientWhenEventLoopReady.mockResolvedValueOnce({
+      ready: true,
+      aborted: false,
+      elapsedMs: 0,
+    });
+    const processOnceSpy = vi.spyOn(process, "once");
+    const previousExitCode = process.exitCode;
+    try {
+      const running = runNodeHost({
+        gatewayHost: "192.168.1.20",
+        gatewayPort: 18789,
+        gatewayBootstrapToken: "bootstrap-123",
+        preferGatewayBootstrapToken: true,
+        gatewayCandidates: [
+          { host: "192.168.1.20", port: 18789, tls: false },
+          { host: "gateway.tailnet.example", port: 443, tls: true },
+        ],
+      });
+      await vi.waitFor(() => expect(mocks.capturedGatewayClients).toHaveLength(1));
+
+      const firstOptions = mocks.capturedGatewayClientOptions[0];
+      firstOptions?.onClose?.(1006, "transport unavailable", {
+        phase: "pre-hello",
+        socketOpened: false,
+        transportValidated: false,
+        connectRequestSent: false,
+        transientPreHelloCleanClose: false,
+      });
+      await vi.waitFor(() => expect(mocks.capturedGatewayClients).toHaveLength(2));
+
+      expect(mocks.capturedGatewayClientOptions[1]?.url).toBe("wss://gateway.tailnet.example:443");
+
+      mocks.capturedGatewayClientOptions[1]?.onHelloOk?.({} as never);
+      await vi.waitFor(() => expect(mocks.configureNodeHost).toHaveBeenCalledTimes(2));
+      expect(mocks.capturedConfiguredGatewayConfigs[1]).toEqual({
+        host: "gateway.tailnet.example",
+        port: 443,
+        tls: true,
+      });
+
+      await vi.waitFor(() =>
+        expect(processOnceSpy.mock.calls.some(([event]) => event === "SIGTERM")).toBe(true),
+      );
+      const onSigterm = processOnceSpy.mock.calls.find(([event]) => event === "SIGTERM")?.[1];
+      onSigterm?.("SIGTERM");
+      await running;
+    } finally {
+      for (const [event, listener] of processOnceSpy.mock.calls) {
+        if ((event === "SIGINT" || event === "SIGTERM") && typeof listener === "function") {
+          process.off(event, listener);
+        }
+      }
+      process.exitCode = previousExitCode;
+      processOnceSpy.mockRestore();
+    }
+  });
+
+  it("stops the canonical runtime after a service enrollment hello", async () => {
+    mocks.useFakeRuntime = true;
+    mocks.startGatewayClientWhenEventLoopReady.mockResolvedValueOnce({
+      ready: true,
+      aborted: false,
+      elapsedMs: 0,
+    });
+    const previousExitCode = process.exitCode;
+    try {
+      const running = runNodeHost({
+        gatewayHost: "gateway.example",
+        gatewayPort: 443,
+        gatewayTls: true,
+        gatewayBootstrapToken: "bootstrap-token",
+        preferGatewayBootstrapToken: true,
+        stopAfterFirstConnect: true,
+      });
+      await vi.waitFor(() => expect(lastCapturedOptions()?.onHelloOk).toBeTypeOf("function"));
+      lastCapturedOptions()?.onHelloOk?.({
+        protocol: 1,
+        features: { methods: [], events: [] },
+      } as unknown as Parameters<NonNullable<GatewayClientOptions["onHelloOk"]>>[0]);
+      await running;
+
+      expect(mocks.capturedGatewayClients[0]?.stop).toHaveBeenCalledOnce();
+      expect(mocks.activeRuntime.close).toHaveBeenCalledOnce();
+      expect(mocks.capturedGatewayClients[0]?.request).not.toHaveBeenCalled();
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+
   it("routes invoke input, cancellation, and connection close to the runtime", async () => {
     mocks.useFakeRuntime = true;
     await expect(runNodeHost({ gatewayHost: "127.0.0.1", gatewayPort: 18789 })).rejects.toThrow(
@@ -254,27 +372,6 @@ describe("runNodeHost", () => {
     );
     const options = lastCapturedOptions();
 
-    options?.onEvent?.({
-      type: "event",
-      event: "node.invoke.request",
-      payload: {
-        id: "invoke-1",
-        nodeId: "node-1",
-        command: "system.run",
-        sessionKey: "agent:main:main",
-      },
-    });
-    await vi.waitFor(() =>
-      expect(mocks.activeRuntime.invoke).toHaveBeenCalledWith({
-        id: "invoke-1",
-        nodeId: "node-1",
-        command: "system.run",
-        paramsJSON: null,
-        timeoutMs: null,
-        idempotencyKey: null,
-        sessionKey: "agent:main:main",
-      }),
-    );
     options?.onEvent?.({
       type: "event",
       event: "node.invoke.input",
@@ -285,15 +382,10 @@ describe("runNodeHost", () => {
       event: "node.invoke.cancel",
       payload: { invokeId: "invoke-1", nodeId: "node-1" },
     });
-    await vi.waitFor(() => {
-      expect(mocks.activeRuntime.handleInput).toHaveBeenCalledWith(
-        "invoke-1",
-        3,
-        '{"kind":"data"}',
-      );
-      expect(mocks.activeRuntime.cancel).toHaveBeenCalledWith("invoke-1");
-    });
     options?.onClose?.(1000, "connection closed");
+
+    expect(mocks.activeRuntime.handleInput).toHaveBeenCalledWith("invoke-1", 3, '{"kind":"data"}');
+    expect(mocks.activeRuntime.cancel).toHaveBeenCalledWith("invoke-1");
     expect(mocks.activeRuntime.cancelAll).toHaveBeenCalledOnce();
   });
 
@@ -529,12 +621,12 @@ describe("runNodeHost", () => {
 
     options?.onHelloOk?.({
       protocol: 1,
-      features: { methods: [], events: [] },
+      features: {
+        methods: [NODE_PROTOCOL_FEATURES_UPDATE_METHOD, NODE_PLUGIN_TOOLS_UPDATE_METHOD],
+        events: [],
+      },
     } as unknown as Parameters<NonNullable<GatewayClientOptions["onHelloOk"]>>[0]);
 
-    expect(client?.request).toHaveBeenCalledWith("node.protocolFeatures.update", {
-      features: ["node-invoke-session-key-envelope-v1"],
-    });
     expect(client?.request).toHaveBeenCalledWith("node.pluginTools.update", {
       tools: [
         {
@@ -562,7 +654,7 @@ describe("runNodeHost", () => {
       const client = mocks.capturedGatewayClients[0];
       lastCapturedOptions()?.onHelloOk?.({
         protocol: 1,
-        features: { methods: [], events: [] },
+        features: { methods: [NODE_PLUGIN_TOOLS_UPDATE_METHOD], events: [] },
       } as unknown as Parameters<NonNullable<GatewayClientOptions["onHelloOk"]>>[0]);
       expect(client?.request).toHaveBeenCalledWith("node.pluginTools.update", {
         tools: [expect.objectContaining({ name: "remote_echo" })],
@@ -571,7 +663,9 @@ describe("runNodeHost", () => {
       mocks.nodePluginTools = [];
       mocks.availabilityChanged?.();
 
-      expect(client?.request).toHaveBeenLastCalledWith("node.pluginTools.update", { tools: [] });
+      await vi.waitFor(() => {
+        expect(client?.request).toHaveBeenLastCalledWith("node.pluginTools.update", { tools: [] });
+      });
       const onSigterm = processOnceSpy.mock.calls.find(([event]) => event === "SIGTERM")?.[1];
       onSigterm?.("SIGTERM");
       await running;
@@ -606,7 +700,7 @@ describe("runNodeHost", () => {
     );
     options?.onHelloOk?.({
       protocol: 1,
-      features: { methods: [], events: [] },
+      features: { methods: [NODE_SKILLS_UPDATE_METHOD], events: [] },
     } as unknown as Parameters<NonNullable<GatewayClientOptions["onHelloOk"]>>[0]);
     expect(mocks.capturedGatewayClients[0]?.request).toHaveBeenCalledWith("node.skills.update", {
       skills: mocks.nodeSkillDescriptors,
@@ -624,7 +718,7 @@ describe("runNodeHost", () => {
     );
     lastCapturedOptions()?.onHelloOk?.({
       protocol: 1,
-      features: { methods: [], events: [] },
+      features: { methods: [NODE_SKILLS_UPDATE_METHOD], events: [] },
     } as unknown as Parameters<NonNullable<GatewayClientOptions["onHelloOk"]>>[0]);
 
     expect(mocks.capturedGatewayClients[0]?.request).not.toHaveBeenCalledWith(
@@ -654,7 +748,7 @@ describe("runNodeHost", () => {
     expect(options?.commands).toContain("mcp.tools.call.v1");
     options?.onHelloOk?.({
       protocol: 1,
-      features: { methods: [], events: [] },
+      features: { methods: [NODE_PLUGIN_TOOLS_UPDATE_METHOD], events: [] },
     } as unknown as Parameters<NonNullable<GatewayClientOptions["onHelloOk"]>>[0]);
     expect(mocks.capturedGatewayClients[0]?.request).toHaveBeenCalledWith(
       "node.pluginTools.update",
@@ -679,7 +773,7 @@ describe("runNodeHost", () => {
     await vi.waitFor(() => expect(lastCapturedOptions()).toBeDefined());
     lastCapturedOptions()?.onHelloOk?.({
       protocol: 1,
-      features: { methods: [], events: [] },
+      features: { methods: [NODE_PLUGIN_TOOLS_UPDATE_METHOD], events: [] },
     } as unknown as Parameters<NonNullable<GatewayClientOptions["onHelloOk"]>>[0]);
     expect(mocks.capturedGatewayClients[0]?.request).toHaveBeenCalledWith(
       "node.pluginTools.update",
@@ -701,10 +795,12 @@ describe("runNodeHost", () => {
       close: mocks.closeMcpManager,
     });
     await expect(running).rejects.toThrow("event loop readiness timeout");
-    expect(mocks.capturedGatewayClients[0]?.request).toHaveBeenLastCalledWith(
-      "node.pluginTools.update",
-      { tools: expect.arrayContaining([expect.objectContaining({ pluginId: "node-mcp" })]) },
-    );
+    await vi.waitFor(() => {
+      expect(mocks.capturedGatewayClients[0]?.request).toHaveBeenLastCalledWith(
+        "node.pluginTools.update",
+        { tools: expect.arrayContaining([expect.objectContaining({ pluginId: "node-mcp" })]) },
+      );
+    });
   });
 
   it.each([

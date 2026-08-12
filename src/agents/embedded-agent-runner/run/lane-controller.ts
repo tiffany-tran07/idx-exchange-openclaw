@@ -10,7 +10,6 @@ import {
 } from "../../../infra/agent-run-registry.js";
 import { enqueueCommandInLane, getCommandLaneSnapshot } from "../../../process/command-queue.js";
 import type { CommandQueueEnqueueOptions } from "../../../process/command-queue.types.js";
-import { rebindAgentExecutionAttribution } from "../../agent-execution-attribution.js";
 import { withSessionPlacementTurnAdmission } from "../../session-placement-admission.js";
 import type { EmbeddedAgentRunResult } from "../types.js";
 import {
@@ -21,7 +20,7 @@ import {
   withEmbeddedRunLaneTimeout,
 } from "./lane-runtime.js";
 import type { RunEmbeddedAgentParams } from "./params.js";
-import { assertAgentHarnessRunAdmission } from "./session-bootstrap.js";
+import { claimAgentSessionWriter } from "./session-bootstrap.js";
 
 type LaneParams = RunEmbeddedAgentParams & {
   sessionFile: string;
@@ -153,7 +152,18 @@ export function createEmbeddedRunLaneController<TParams extends LaneParams>(opti
       }
       // Queue waits can outlive durable harness and placement bindings.
       // Recheck and claim only after lifecycle admission, before context or hooks execute.
-      assertAgentHarnessRunAdmission(params);
+      const writerClaim = await claimAgentSessionWriter(params);
+      if (writerClaim) {
+        params = {
+          ...params,
+          sessionTarget: {
+            ...params.sessionTarget,
+            expectedLifecycleRevision: writerClaim.expectedLifecycleRevision,
+            expectedWriterRunId: writerClaim.expectedWriterRunId,
+          },
+        };
+        options.setParams(params);
+      }
       return await withAgentRunLifecycleGeneration(lifecycleGeneration, () =>
         withSessionPlacementTurnAdmission(
           {
@@ -169,12 +179,8 @@ export function createEmbeddedRunLaneController<TParams extends LaneParams>(opti
             assertAgentRunLifecycleGenerationCurrent(lifecycleGeneration);
             releaseQueuedContext("admitted");
             // Queue-stage rotation may rebind, but placement admitted into a retired runtime must fail.
-            const attribution = existingContext?.attribution
-              ? rebindAgentExecutionAttribution(existingContext.attribution, lifecycleGeneration)
-              : undefined;
             claimAgentRunContext(params.runId, {
               ...existingContext,
-              ...(attribution ? { attribution } : {}),
               sessionKey: params.sessionKey ?? existingContext?.sessionKey,
               sessionId: params.sessionId ?? existingContext?.sessionId,
               lifecycleGeneration,

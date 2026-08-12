@@ -8,6 +8,7 @@ import {
   buildBackupArchiveBasename,
   buildBackupArchivePath,
   buildBackupArchiveRoot,
+  canonicalizePathForContainment,
   type BackupAsset,
   resolveBackupPlanFromDisk,
 } from "../commands/backup-shared.js";
@@ -30,7 +31,11 @@ import {
   publishPreparedBackupArchive,
   type BackupArchivePublication,
 } from "./backup-archive-publication.js";
-import { removePreparedBackupArchive, writeArchiveStreamToFile } from "./backup-create-stream.js";
+import {
+  observeBackupTarEntryProgress,
+  removePreparedBackupArchive,
+  writeArchiveStreamToFile,
+} from "./backup-create-stream.js";
 import { writeTarArchiveWithRetry } from "./backup-tar-retry.js";
 import { isTransientSqliteBackupPath, isVolatileBackupPath } from "./backup-volatile-filter.js";
 import {
@@ -209,26 +214,6 @@ async function chooseBackupTempRoot(params: {
   return fallback;
 }
 
-async function canonicalizePathForContainment(targetPath: string): Promise<string> {
-  const resolved = path.resolve(targetPath);
-  const suffix: string[] = [];
-  let probe = resolved;
-
-  while (true) {
-    try {
-      const realProbe = await fs.realpath(probe);
-      return suffix.length === 0 ? realProbe : path.join(realProbe, ...suffix.toReversed());
-    } catch {
-      const parent = path.dirname(probe);
-      if (parent === probe) {
-        return resolved;
-      }
-      suffix.push(path.basename(probe));
-      probe = parent;
-    }
-  }
-}
-
 function buildManifest(params: {
   createdAt: string;
   archiveRoot: string;
@@ -327,7 +312,7 @@ function normalizeBackupFilterPath(value: string): string {
   return value.replaceAll("\\", "/").replace(/\/+$/u, "");
 }
 
-const REINSTALLABLE_STATE_ROOTS = new Set(["dev", "git", "npm", "npm-runtime", "tools"]);
+const NON_AUTHORITATIVE_STATE_ROOTS = new Set(["dev", "git", "npm", "npm-runtime", "tmp", "tools"]);
 
 function buildStateBackupFilter(
   stateDir: string,
@@ -344,7 +329,7 @@ function buildStateBackupFilter(
     }
 
     const segments = normalizedFilePath.slice(statePrefix.length).split("/");
-    if (REINSTALLABLE_STATE_ROOTS.has(segments[0] ?? "")) {
+    if (NON_AUTHORITATIVE_STATE_ROOTS.has(segments[0] ?? "")) {
       const resolvedFilePath = path.resolve(filePath);
       // Configured workspaces nested under a managed root remain authoritative
       // user state. Keep their ancestors traversable without admitting siblings.
@@ -446,7 +431,6 @@ function resolveSqliteBackupDatabasePath(sourcePath: string): string | undefined
 function classifyStateSqliteBackupSourcePath(
   sourcePath: string,
   stateDir: string,
-  gatewayLockDirs: readonly string[],
 ): "excluded" | "sqlite" | undefined {
   const resolvedSourcePath = path.resolve(sourcePath);
   if (!isPathWithin(resolvedSourcePath, stateDir)) {
@@ -455,7 +439,7 @@ function classifyStateSqliteBackupSourcePath(
   if (isStatePackageContentPath(resolvedSourcePath, stateDir)) {
     return undefined;
   }
-  if (isTransientSqliteBackupPath(resolvedSourcePath, gatewayLockDirs)) {
+  if (isTransientSqliteBackupPath(resolvedSourcePath)) {
     return "excluded";
   }
   const databasePath = resolveSqliteBackupDatabasePath(resolvedSourcePath);
@@ -472,7 +456,7 @@ function isBackupTarFilterFile(entry: import("node:fs").Stats | import("tar").Re
 async function listStateSqlitePaths(params: {
   stateDir: string;
   globalStateSqlitePath: string;
-  gatewayLockDirs: readonly string[];
+  gatewayLockDir: string;
   preservedStatePaths?: readonly string[];
 }): Promise<{ snapshotPaths: string[]; discoveredSourcePaths: Set<string> }> {
   const snapshotPaths = new Set<string>();
@@ -512,7 +496,11 @@ async function listStateSqlitePaths(params: {
         continue;
       }
       if (entry.isDirectory()) {
-        if (stateFilter(entryPath) && !isStatePackageContentPath(entryPath, params.stateDir)) {
+        if (
+          stateFilter(entryPath) &&
+          !isPathWithin(entryPath, params.gatewayLockDir) &&
+          !isStatePackageContentPath(entryPath, params.stateDir)
+        ) {
           await visit(entryPath);
         }
       } else if (
@@ -524,7 +512,6 @@ async function listStateSqlitePaths(params: {
         const sqliteSourceKind = classifyStateSqliteBackupSourcePath(
           resolvedEntryPath,
           params.stateDir,
-          params.gatewayLockDirs,
         );
         if (sqliteSourceKind === "sqlite") {
           discoveredSourcePaths.add(resolvedEntryPath);
@@ -596,12 +583,7 @@ async function createStateSqliteBackupPlan(params: {
   const discovery = await listStateSqlitePaths({
     stateDir: params.stateDir,
     globalStateSqlitePath,
-    // CLI and managed services use different temp roots for the same
-    // disposable gateway/device coordination databases.
-    gatewayLockDirs: [
-      resolveGatewayLockDir(),
-      resolveGatewayLockDir(() => path.join(params.stateDir, "tmp")),
-    ],
+    gatewayLockDir: resolveGatewayLockDir(params.stateDir),
     preservedStatePaths: params.preservedStatePaths,
   });
   const globalStateIdentity = await fs.stat(globalStateSqlitePath).catch((error: unknown) => {
@@ -866,10 +848,7 @@ export async function createBackupArchive(
     const stateFilter = stateAsset
       ? buildStateBackupFilter(stateAsset.sourcePath, preservedStatePaths)
       : undefined;
-    const gatewayLockDirs = [
-      resolveGatewayLockDir(),
-      resolveGatewayLockDir(() => path.join(plan.stateDir, "tmp")),
-    ];
+    const gatewayLockDir = resolveGatewayLockDir(plan.stateDir);
     const volatilePlan = { stateDirs: [stateAsset?.sourcePath ?? plan.stateDir] };
     let skippedVolatileCount = 0;
     // node-tar invokes filters from async stat callbacks, so throwing inside
@@ -888,6 +867,9 @@ export async function createBackupArchive(
       if (stateFilter && !stateFilter(entryPath)) {
         return false;
       }
+      if (isPathWithin(resolvedEntryPath, gatewayLockDir)) {
+        return false;
+      }
       if (
         stateAsset &&
         isLegacyAuditMigrationBackupPath(resolvedEntryPath, stateAsset.sourcePath)
@@ -895,11 +877,7 @@ export async function createBackupArchive(
         return false;
       }
       const sqliteSourceKind = stateAsset
-        ? classifyStateSqliteBackupSourcePath(
-            resolvedEntryPath,
-            stateAsset.sourcePath,
-            gatewayLockDirs,
-          )
+        ? classifyStateSqliteBackupSourcePath(resolvedEntryPath, stateAsset.sourcePath)
         : undefined;
       if (sqliteSourceKind === "excluded") {
         return false;
@@ -934,30 +912,41 @@ export async function createBackupArchive(
         unexpectedSqliteSourcePaths.length = 0;
         const prepared = await writeArchiveStreamToFile({
           archivePath: attemptTempArchivePath,
-          archiveStream: tar.c(
-            {
-              gzip: true,
-              portable: true,
-              preservePaths: true,
-              linkCache: createBackupLinkCache(),
-              statCache: createBackupVolatileStatCache(volatilePlan),
-              filter: tarFilter,
-              onWriteEntry: (entry) => {
-                entry.path = remapArchiveEntryPath({
-                  entryPath: entry.path,
-                  manifestPath,
-                  archiveRoot,
-                  sourcePathRemaps,
-                });
+          createArchiveStream: (reportProgress) =>
+            tar.c(
+              {
+                gzip: true,
+                portable: true,
+                preservePaths: true,
+                linkCache: createBackupLinkCache(),
+                statCache: createBackupVolatileStatCache(volatilePlan),
+                filter: (entryPath, entryStat) => {
+                  reportProgress({ phase: "traversal", entryPath });
+                  return tarFilter(entryPath, entryStat);
+                },
+                onWriteEntry: (entry) => {
+                  const sourceEntryPath = entry.path;
+                  reportProgress({ phase: "entry", entryPath: sourceEntryPath });
+                  if (entry.type === "File" && (entry.stat?.size ?? 0) > 0) {
+                    observeBackupTarEntryProgress(entry, (bytes) => {
+                      reportProgress({ phase: "raw", entryPath: sourceEntryPath, bytes });
+                    });
+                  }
+                  entry.path = remapArchiveEntryPath({
+                    entryPath: entry.path,
+                    manifestPath,
+                    archiveRoot,
+                    sourcePathRemaps,
+                  });
+                },
               },
-            },
-            [
-              manifestPath,
-              ...stateSqliteBackup.snapshots.map((snapshot) => snapshot.sourcePath),
-              ...legacyAuditSnapshots.map((snapshot) => snapshot.sourcePath),
-              ...result.assets.map((asset) => asset.sourcePath),
-            ],
-          ),
+              [
+                manifestPath,
+                ...stateSqliteBackup.snapshots.map((snapshot) => snapshot.sourcePath),
+                ...legacyAuditSnapshots.map((snapshot) => snapshot.sourcePath),
+                ...result.assets.map((asset) => asset.sourcePath),
+              ],
+            ),
           onPartialArchive: (partialArchive) => {
             publication.pendingCleanupArchives.push(partialArchive);
           },
