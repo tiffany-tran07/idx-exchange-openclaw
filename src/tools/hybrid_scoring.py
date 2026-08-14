@@ -1,5 +1,6 @@
 from sklearn.metrics.pairwise import cosine_similarity
 from src.tools.embedding_generation import get_embedding
+from src.tools.database import fetch_listing_by_id
 import numpy as np
 import sys
 import pandas as pd
@@ -33,16 +34,43 @@ def calculate_similarity_score(
     return round(score, 2)
 
 if __name__ == "__main__":
-    target = sys.argv[1]
-    target_remarks = str(target['L_Remarks'].iloc[0])
+    target_id = sys.argv[1]
+    candidate_id = sys.argv[2]
+
+    target_df = fetch_listing_by_id(target_id)
+    candidate_df = fetch_listing_by_id(candidate_id)
+
+    if target_df.empty or candidate_df.empty:
+        print("One or both listings were not found.")
+        raise SystemExit(1)
+
+    # Convert DataFrame rows to dictionaries
+    target = target_df.iloc[0].to_dict()
+    candidate = candidate_df.iloc[0].to_dict()
+
+    # Extract remarks
+    target_remarks = (
+        "" if pd.isna(target["L_Remarks"])
+        else str(target["L_Remarks"])
+    )
+
+    candidate_remarks = (
+        "" if pd.isna(candidate["L_Remarks"])
+        else str(candidate["L_Remarks"])
+    )
+
+    # Generate embeddings
     target_emb = get_embedding(target_remarks)
-    target_id = str(target['L_ListingID'].iloc[0])
-
-    candidate = sys.argv[2]
-    candidate_remarks = str(candidate['L_Remarks'].iloc[0])
     candidate_emb = get_embedding(candidate_remarks)
-    candidate_id = str(candidate['L_ListingID'].iloc[0])
 
-    calculate_similarity_score(target, candidate,target_emb,candidate_emb)
+    # Calculate similarity
+    score = calculate_similarity_score(
+        target,
+        candidate,
+        target_emb,
+        candidate_emb
+    )
 
-    print()
+    print(
+        f"Similarity Score of {target_id} and {candidate_id}: {score}/100"
+    )
