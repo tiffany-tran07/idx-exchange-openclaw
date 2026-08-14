@@ -1,4 +1,5 @@
 from sklearn.metrics.pairwise import cosine_similarity
+from src.tools.embedding_generation import get_embedding
 import numpy as np
 import sys
 import pandas as pd
@@ -32,6 +33,16 @@ def calculate_similarity_score(
     return round(score, 2)
 
 if __name__ == "__main__":
-    user_query = sys.argv[1]
+    target = sys.argv[1]
+    target_remarks = str(target['L_Remarks'].iloc[0])
+    target_emb = get_embedding(target_remarks)
+    target_id = str(target['L_ListingID'].iloc[0])
+
     candidate = sys.argv[2]
-    calculate_similarity_score()
+    candidate_remarks = str(candidate['L_Remarks'].iloc[0])
+    candidate_emb = get_embedding(candidate_remarks)
+    candidate_id = str(candidate['L_ListingID'].iloc[0])
+
+    calculate_similarity_score(target, candidate,target_emb,candidate_emb)
+
+    print()
