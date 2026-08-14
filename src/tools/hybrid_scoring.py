@@ -1,5 +1,7 @@
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import sys
+import pandas as pd
 
 def calculate_similarity_score(
     target: dict,
@@ -30,4 +32,6 @@ def calculate_similarity_score(
     return round(score, 2)
 
 if __name__ == "__main__":
+    user_query = sys.argv[1]
+    candidate = sys.argv[2]
     calculate_similarity_score()
