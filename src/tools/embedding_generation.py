@@ -28,11 +28,11 @@ def get_embedding(text: str, model="gemini-embedding-001") -> list[float]:
 # Build embedding for a listing (combine key fields)
 def build_listing_embedding(row: dict) -> list[float]:
     text = f"""
-        {row["L_Type_"]} in {row["L_City"]}, CA.
-        {row["L_Keyword2"]} beds, {row["LM_Dec_3"]} baths.
-        {row["LM_Int2_3"]} sq ft. Built {row["YearBuilt"]}.
-        Price: ${row["L_SystemPrice"]:,}.
-        {row.get("L_Remarks", "")}
+        {row["Type"]} in {row["City"]}, CA.
+        {row["Beds"]} beds, {row["Baths"]} baths.
+        {row["SQFT"]} sq ft. Built {row["YearBuilt"]}.
+        Price: ${row["SystemPrice"]:,}.
+        {row.get("Remarks", "")}
     """.strip()
     return get_embedding(text)
 def find_similar_listings(
@@ -48,11 +48,11 @@ def find_similar_listings(
         scores.append((listing_id, float(sim)))
     scores.sort(key=lambda x: x[1], reverse=True)
     return [lid for lid, _ in scores[:top_k]]
-def fetch_sample_listings(city: str, limit: int = 5) -> pd.DataFrame:
+def fetch_sample_listings(city: str, limit = 30) -> pd.DataFrame:
     query = """
         SELECT
-            L_ListingID, L_Type_, L_City, L_Keyword2, LM_Dec_3,
-            LM_Int2_3, YearBuilt, L_SystemPrice, L_Remarks
+            L_ListingID AS ListingID, L_Type_ AS Type, L_City AS City, L_Keyword2 AS Beds, LM_Dec_3 AS Baths,
+            LM_Int2_3 AS SQFT, YearBuilt, L_SystemPrice AS SystemPrice, L_Remarks AS Remarks
         FROM rets_property
         WHERE L_Status = 'Active'
             AND LOWER(L_City) = LOWER(%s)
@@ -84,22 +84,33 @@ def fetch_sample_listings(city: str, limit: int = 5) -> pd.DataFrame:
 #     print("Top matching listing IDs:", top_matches)
 
 if __name__ == "__main__":
-     user_input = sys.argv[1]
+     city = sys.argv[1]
      query = sys.argv[2]
-     df = fetch_sample_listings(user_input, limit=5)
+     df = fetch_sample_listings(city)
      if df.empty:
-        print(f"No active listings found for {user_input!r} — try a different city.")
+        print(f"No active listings found for {city!r} — try a different city.")
         raise SystemExit(0)
  
-     print(f"Fetched {len(df)} listings for {user_input}. Building embeddings...")
+     print(f"Fetched {len(df)} listings for {city}. Building embeddings...")
  
      listing_embeddings = []
      for _, row in df.iterrows():
         emb = build_listing_embedding(row.to_dict())
-        listing_embeddings.append((row["L_ListingID"], emb))
-        print(f"  embedded listing {row['L_ListingID']}")
+        listing_embeddings.append((row["ListingID"], emb))
+        print(f"  embedded listing {row['ListingID']}")
  
      print(f"\nQuery: {query!r}")
  
      top_matches = find_similar_listings(query, listing_embeddings, top_k=3)
-     print("Top matching listing IDs:", top_matches)
+     print("\nTop matching listings:")
+
+     for rank, listing_id in enumerate(top_matches, start=1):
+        listing = df.loc[df["ListingID"] == listing_id]
+
+        if listing.empty: 
+            continue
+
+        row = listing.iloc[0]
+
+        print(f"\n--- Match #{rank} ---")
+        print(row.to_string())
