@@ -1,14 +1,7 @@
 import pandas as pd
-import os
 import sys
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-load_dotenv()
+from src.tools.engine import engine
 
-engine = create_engine(
-    f"mysql+mysqlconnector://{os.environ['MYSQL_USER']}:{os.environ['MYSQL_PASSWORD']}"
-    f"@{os.environ['MYSQL_HOST']}/{os.environ['MYSQL_DATABASE']}"
-)
 
 # Monthly price trends for a city
 def get_price_trend(city: str, months: int = 24):

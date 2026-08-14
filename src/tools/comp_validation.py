@@ -1,18 +1,8 @@
 # Check if recommended price is supported by recent comps
 import sys
-import os
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
+from src.tools.engine import engine
+from sqlalchemy import text
 
-load_dotenv()
-# print("MYSQL_USER:", os.environ.get("MYSQL_USER"))
-# print("MYSQL_HOST:", os.environ.get("MYSQL_HOST"))
-# print("MYSQL_DATABASE:", os.environ.get("MYSQL_DATABASE"))
-
-engine = create_engine(
-    f"mysql+mysqlconnector://{os.environ['MYSQL_USER']}:{os.environ['MYSQL_PASSWORD']}"
-    f"@{os.environ['MYSQL_HOST']}/{os.environ['MYSQL_DATABASE']}"
-)
 
 def query(sql, params):
     with engine.connect() as conn:
