@@ -11,6 +11,8 @@ export async function orchestrate(query: string, userId: string) {
       return await recommendationAgent(session.lastResults?.[0]);
     case "knowledge":
       return await ragAgent(query);
+    case "email":
+      return await emailAgent(query);
     case "mixed": {
       const [listings, stats] = await Promise.all([
         propertySearchAgent(query, userId),
