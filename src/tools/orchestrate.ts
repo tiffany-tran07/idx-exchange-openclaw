@@ -1,3 +1,5 @@
+export async function classifyIntent(query: string) {}
+
 export async function orchestrate(query: string, userId: string) {
   const intent = await classifyIntent(query);
   // intent: "search" | "market" | "recommend" | "knowledge" | "mixed"
@@ -5,14 +7,14 @@ export async function orchestrate(query: string, userId: string) {
     case "search":
       return await propertySearchAgent(query, userId);
     case "market":
-      return await marketStatsAgent(query);
+      return await marketStatsAgent(query, userId);
     case "recommend":
       const session = getSession(userId);
       return await recommendationAgent(session.lastResults?.[0]);
     case "knowledge":
-      return await ragAgent(query);
-    case "email":
-      return await emailAgent(query);
+      return await ragAgent(query, userId);
+    // case "email":
+    //   return await emailAgent(query);
     case "mixed": {
       const [listings, stats] = await Promise.all([
         propertySearchAgent(query, userId),
