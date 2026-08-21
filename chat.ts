@@ -9,7 +9,7 @@ const rl = readline.createInterface({
 const userId = "manual_tester";
 
 console.log("--- Orchestrator Interactive Shell ---");
-console.log("Ready. Type your queries (e.g., 'Find me a house in Austin').");
+console.log("Ready. Type your queries (e.g., 'Find me a house in San Francisco').");
 console.log("Type 'exit' to quit.\n");
 
 rl.setPrompt("> ");

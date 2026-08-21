@@ -1,4 +1,5 @@
 import { runListingAgent } from "../agents/listing_agent";
+import { runMarketStatsAgent } from "../agents/market_stats_agent";
 import { runRagAgent } from "../agents/rag_agent";
 import { runRequirementsAgent } from "../agents/requirements_agent";
 
@@ -73,7 +74,7 @@ export async function orchestrate(query: string, userId: string) {
       return await runListingAgent(userId);
     }
     case "market":
-      return await marketStatsAgent(query, userId);
+      return await runMarketStatsAgent(query, userId);
     case "recommend":
       const session = getSession(userId);
       return await recommendationAgent(session.lastResults?.[0]);

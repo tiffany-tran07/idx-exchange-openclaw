@@ -1,18 +1,24 @@
 import { exec } from "child_process";
 import util from "util";
-import { getSession } from "../tools/session_memory";
+import { parsePropertyQuery } from "../tools/property_parser";
+import { getSession, updateSession } from "../tools/session_memory";
 
 const execPromise = util.promisify(exec);
 
 export async function runRagAgent(query: string, userId: string) {
+  const newCriteria = await parsePropertyQuery(query);
+  if (newCriteria.city) {
+    updateSession(userId, { city: newCriteria.city });
+  }
+
   const session = getSession(userId);
-  const city = session.city || "unknown"; // Fallback to unknown if no city in memory
+  const city = session.city || "unknown";
 
   try {
     // Assuming rag.py expects arguments: city then query
     const { stdout } = await execPromise(`python3 src/tools/rag.py "${city}" "${query}"`);
     return {
-      response: stdout.trim(),
+      response: stdout.trim() || "No information found for your query in this city.",
     };
   } catch (err) {
     console.error("RAG Agent error:", err);

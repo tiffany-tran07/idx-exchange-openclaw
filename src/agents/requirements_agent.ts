@@ -10,13 +10,19 @@ export async function runRequirementsAgent(
   query: string,
   userId: string,
 ): Promise<RequirementsStatus> {
-  const session = getSession(userId);
-
   // 1. Extract new data from the input string
   const newCriteria = await parsePropertyQuery(query);
 
+  // Filter out null/undefined values so we don't clobber existing memory
+  const cleanCriteria = Object.fromEntries(
+    Object.entries(newCriteria).filter(([_, v]) => v != null),
+  );
+
   // 2. Merge this into the persistent memory
-  updateSession(userId, newCriteria);
+  updateSession(userId, cleanCriteria);
+
+  // 3. Re-fetch the updated session to validate
+  const session = getSession(userId);
 
   // 3. Check what's still missing
   const requiredFields = ["city", "maxPrice", "beds"];

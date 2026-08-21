@@ -14,13 +14,14 @@ export async function runListingAgent(userId: string) {
   // 2. Store results in memory for potential recommendations
   updateSession(userId, { lastResults: results });
 
+  // Format the response
+  const listingDetails = results
+    .map((item) => `- ${item.L_Address}: $${(item as any).price.toLocaleString()}`)
+    .join("\n");
+
   // 3. Return results
   return {
-    response: `Found ${results.length} properties matching your criteria.`,
-    results: results.map((item: any) => ({
-      title: item.L_Address,
-      price: item.price,
-      url: item.link,
-    })),
+    response: `Found ${results.length} properties:\n${listingDetails}`,
+    results: results,
   };
 }
