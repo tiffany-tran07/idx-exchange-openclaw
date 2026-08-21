@@ -51,12 +51,14 @@ export async function searchActiveListings(filters: PropertyFilters, page = 1, l
   // console.log("Executing SQL:", sql, "with params:", params);
   return query<ListingRow>(sql, params);
 }
-const user_query = process.argv[2];
-try {
-  const activeListings = await searchActiveListings(user_query);
-  console.log(JSON.stringify(activeListings));
-} catch (err) {
-  console.error("Failed to search active listings");
-} finally {
-  process.exit(0);
-}
+// if (process.argv[1] === new URL(import.meta.url).pathname) {
+//   const user_query = process.argv[2];
+//   try {
+//     const activeListings = await searchActiveListings(JSON.parse(user_query));
+//     console.log(JSON.stringify(activeListings));
+//   } catch (err) {
+//     console.error("Failed to search active listings");
+//   } finally {
+//     process.exit(0);
+//   }
+// }

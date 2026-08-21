@@ -21,11 +21,11 @@ export async function get_market_summary() {
   return query<MarketSummary>(sql, []);
 }
 
-try {
-  const marketSummary = await get_market_summary();
-  console.log(JSON.stringify(marketSummary));
-} catch (err) {
-  console.error("Failed to retrieve market summary");
-} finally {
-  process.exit(0);
-}
+// try {
+//   const marketSummary = await get_market_summary();
+//   console.log(JSON.stringify(marketSummary));
+// } catch (err) {
+//   console.error("Failed to retrieve market summary");
+// } finally {
+//   process.exit(0);
+// }

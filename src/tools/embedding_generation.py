@@ -70,34 +70,34 @@ def fetch_sample_listings(city: str, limit = 30) -> pd.DataFrame:
 #     top_matches = find_similar_listings(test_query, listing_embeddings, top_k=3)
 #     print("Top matching listing IDs:", top_matches)
 
-if __name__ == "__main__":
-     city = sys.argv[1]
-     query = sys.argv[2]
-     df = fetch_sample_listings(city)
-     if df.empty:
-        print(f"No active listings found for {city!r} — try a different city.")
-        raise SystemExit(0)
+# if __name__ == "__main__":
+#      city = sys.argv[1]
+#      query = sys.argv[2]
+#      df = fetch_sample_listings(city)
+#      if df.empty:
+#         print(f"No active listings found for {city!r} — try a different city.")
+#         raise SystemExit(0)
  
-     print(f"Fetched {len(df)} listings for {city}. Building embeddings...")
+#      print(f"Fetched {len(df)} listings for {city}. Building embeddings...")
  
-     listing_embeddings = []
-     for _, row in df.iterrows():
-        emb = build_listing_embedding(row.to_dict())
-        listing_embeddings.append((row["ListingID"], emb))
-        print(f"  embedded listing {row['ListingID']}")
+#      listing_embeddings = []
+#      for _, row in df.iterrows():
+#         emb = build_listing_embedding(row.to_dict())
+#         listing_embeddings.append((row["ListingID"], emb))
+#         print(f"  embedded listing {row['ListingID']}")
  
-     print(f"\nQuery: {query!r}")
+#      print(f"\nQuery: {query!r}")
  
-     top_matches = find_similar_listings(query, listing_embeddings, top_k=3)
-     print("\nTop matching listings:")
+#      top_matches = find_similar_listings(query, listing_embeddings, top_k=3)
+#      print("\nTop matching listings:")
 
-     for rank, listing_id in enumerate(top_matches, start=1):
-        listing = df.loc[df["ListingID"] == listing_id]
+#      for rank, listing_id in enumerate(top_matches, start=1):
+#         listing = df.loc[df["ListingID"] == listing_id]
 
-        if listing.empty: 
-            continue
+#         if listing.empty: 
+#             continue
 
-        row = listing.iloc[0]
+#         row = listing.iloc[0]
 
-        print(f"\n--- Match #{rank} ---")
-        print(row.to_string())
+#         print(f"\n--- Match #{rank} ---")
+#         print(row.to_string())

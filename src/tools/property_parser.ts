@@ -1,6 +1,6 @@
 export async function parsePropertyQuery(query: string) {
   const cityMatch = query.match(
-    /in ([A-Za-z\s]+?)(?:\s+under|\s+with|\s+at|\s+that|\s+which|,|$)/i,
+    /in ([A-Za-z\s]+?)(?:\s+under|\s+with|\s+at|\s+that|\s+which|\s+for|\s+and|,|\?|\.|$)/i,
   );
   const priceMatch = query.match(/under \$?([\d,.]+)(k|m)?/i);
   const bedsMatch = query.match(/(\d+(?:\.5)?)[\s-]*(bed|beds|bedroom|bedrooms)/i);
@@ -33,12 +33,14 @@ export async function parsePropertyQuery(query: string) {
   };
 }
 
-const result = process.argv[2];
-try {
-  const property_features = await parsePropertyQuery(result);
-  console.log(JSON.stringify(property_features));
-} catch (err) {
-  console.error("Failed to parse property");
-} finally {
-  process.exit(0);
-}
+// if (process.argv[1] === new URL(import.meta.url).pathname) {
+//   const result = process.argv[2];
+//   try {
+//     const property_features = await parsePropertyQuery(result);
+//     console.log(JSON.stringify(property_features));
+//   } catch (err) {
+//     console.error("Failed to parse property");
+//   } finally {
+//     process.exit(0);
+//   }
+// }

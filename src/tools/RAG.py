@@ -169,24 +169,24 @@ def rag_answer(
     return response.choices[0].message.content
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    city = sys.argv[1]
-    query = sys.argv[2]
+#     city = sys.argv[1]
+#     query = sys.argv[2]
 
-    df = fetch_sample_listings(city)
+#     df = fetch_sample_listings(city)
 
-    if df.empty:
-        print(f"No active listings found for {city}.")
-        raise SystemExit(0)
+#     if df.empty:
+#         print(f"No active listings found for {city}.")
+#         raise SystemExit(0)
 
-    docs = dataframe_to_docs(df)
+#     docs = dataframe_to_docs(df)
 
-    print(f"Indexing {len(docs)} listings...")
+#     print(f"Indexing {len(docs)} listings...")
 
-    index = index_documents(docs)
+#     index = index_documents(docs)
 
-    answer = rag_answer(query, index)
+#     answer = rag_answer(query, index)
 
-    print("\nAnswer:")
-    print(answer)
+#     print("\nAnswer:")
+#     print(answer)

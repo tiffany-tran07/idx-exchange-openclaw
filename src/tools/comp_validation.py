@@ -42,9 +42,9 @@ def validate_with_comps(city: str, sqft: int, price: int) -> dict:
         )
     }
 
-if __name__ == "__main__":
-    city = sys.argv[1]
-    sqft = int(sys.argv[2])
-    price = int(sys.argv[3])
-    comps = validate_with_comps(city, sqft, price)
-    print(comps)
+# if __name__ == "__main__":
+#     city = sys.argv[1]
+#     sqft = int(sys.argv[2])
+#     price = int(sys.argv[3])
+#     comps = validate_with_comps(city, sqft, price)
+#     print(comps)
