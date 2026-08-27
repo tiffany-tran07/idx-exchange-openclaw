@@ -23,15 +23,15 @@ def get_price_trend(city: str, months: int = 24):
     df["price_change_pct"] = df["avg_price"].pct_change() * 100
     return df
 
-# if __name__ == "__main__":
-#     city = sys.argv[1]
-#     df = get_price_trend(city)
-#     # check_query = """
-#     #     SELECT MIN(CloseDate) AS earliest, MAX(CloseDate) AS latest, COUNT(*) AS total_rows
-#     #     FROM california_sold
-#     #     WHERE City = %s AND PropertyType = 'Residential'
-#     # """
-#     # print(pd.read_sql(check_query, engine, params=('Irvine',)))
-#     # print(pd.read_sql("SHOW COLUMNS FROM california_sold LIKE 'CloseDate'", engine))
-#     print(df)
+if __name__ == "__main__":
+    city = sys.argv[1]
+    df = get_price_trend(city)
+    # check_query = """
+    #     SELECT MIN(CloseDate) AS earliest, MAX(CloseDate) AS latest, COUNT(*) AS total_rows
+    #     FROM california_sold
+    #     WHERE City = %s AND PropertyType = 'Residential'
+    # """
+    # print(pd.read_sql(check_query, engine, params=('Irvine',)))
+    # print(pd.read_sql("SHOW COLUMNS FROM california_sold LIKE 'CloseDate'", engine))
+    print(df)
 

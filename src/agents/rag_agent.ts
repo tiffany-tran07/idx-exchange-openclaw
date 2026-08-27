@@ -1,24 +1,15 @@
-import { exec } from "child_process";
-import util from "util";
-import { parsePropertyQuery } from "../tools/property_parser";
-import { getSession, updateSession } from "../tools/session_memory";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
-const execPromise = util.promisify(exec);
+const execFilePromise = promisify(execFile);
 
-export async function runRagAgent(query: string, userId: string) {
-  const newCriteria = await parsePropertyQuery(query);
-  if (newCriteria.city) {
-    updateSession(userId, { city: newCriteria.city });
-  }
-
-  const session = getSession(userId);
-  const city = session.city || "unknown";
-
+export async function runRagAgent(query: string, _userId: string) {
   try {
-    // Assuming rag.py expects arguments: city then query
-    const { stdout } = await execPromise(`python3 src/tools/rag.py "${city}" "${query}"`);
+    const { stdout } = await execFilePromise("python3", ["src/tools/RAG.py", query], {
+      maxBuffer: 1024 * 1024,
+    });
     return {
-      response: stdout.trim() || "No information found for your query in this city.",
+      response: stdout.trim() || "No grounded information found for your query.",
     };
   } catch (err) {
     console.error("RAG Agent error:", err);
