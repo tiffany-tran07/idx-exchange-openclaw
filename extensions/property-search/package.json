@@ -1,0 +1,31 @@
+{
+  "name": "@openclaw/property-search",
+  "version": "2026.8.1",
+  "private": true,
+  "description": "Direct WhatsApp property search and real-estate RAG plugin.",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "17.4.2",
+    "mysql2": "^3.22.5"
+  },
+  "devDependencies": {
+    "@openclaw/plugin-sdk": "workspace:*",
+    "openclaw": "workspace:*"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.8.1"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "compat": {
+      "pluginApi": ">=2026.8.1"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "property-search",
+  "name": "Property Search",
+  "description": "Direct WhatsApp property search, market analytics, and real-estate RAG.",
+  "enabledByDefault": true,
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
