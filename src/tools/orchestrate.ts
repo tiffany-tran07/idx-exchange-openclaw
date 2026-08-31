@@ -2,9 +2,11 @@ import { runListingAgent } from "../agents/listing_agent";
 import { runMarketStatsAgent } from "../agents/market_stats_agent";
 import { runRagAgent } from "../agents/rag_agent";
 import { runRequirementsAgent } from "../agents/requirements_agent";
+import { getSession } from "./session_memory.js";
+
+type Intent = "search" | "market" | "recommend" | "knowledge" | "mixed";
 
 export async function classifyIntent(query: string): Promise<Intent> {
-  type Intent = "search" | "market" | "recommend" | "knowledge" | "mixed";
   const q = query.toLowerCase().trim();
 
   const searchPatterns = [
