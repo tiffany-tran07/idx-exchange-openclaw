@@ -1,12 +1,13 @@
-import * as readline from "readline";
-import { orchestrate } from "./src/tools/orchestrate.ts";
+import { randomUUID } from "node:crypto";
+import * as readline from "node:readline";
+import { orchestrate } from "./src/tools/orchestrate.js";
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-const userId = "manual_tester";
+const conversationId = randomUUID();
 
 console.log("--- Orchestrator Interactive Shell ---");
 console.log("Ready. Type your queries (e.g., 'Find me a house in San Francisco').");
@@ -23,10 +24,10 @@ rl.on("line", async (line) => {
   try {
     // The orchestrator returns an object.
     // We expect { response: string, ... }
-    const result = await orchestrate(line, userId);
+    const result = await orchestrate(line, conversationId);
     console.log(`\nAgent: ${result.response}`);
 
-    if (result.action === "request_missing_info") {
+    if ("action" in result && result.action === "request_missing_info") {
       console.log(`(Missing fields: ${result.missing.join(", ")})`);
     }
   } catch (error) {
