@@ -17,6 +17,7 @@ export interface ListingPreview {
   beds: number;
   baths: number;
   sqft: number;
+  remarks?: string;
 }
 
 export interface MarketSummary {
