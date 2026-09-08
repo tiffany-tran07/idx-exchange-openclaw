@@ -15,6 +15,7 @@ export async function parsePropertyQuery(
   const typeMap: Record<string, string> = {
     condo: "Condominium",
     townhome: "Townhouse",
+    townhouse: "Townhouse",
     "single family": "SingleFamilyResidence",
     land: "UnimprovedLand",
   };
