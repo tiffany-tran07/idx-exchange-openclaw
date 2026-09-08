@@ -21,6 +21,7 @@ export async function runListingAgent(sessionId: string) {
     beds: numeric(listing.beds),
     baths: numeric(listing.baths),
     sqft: numeric(listing.sqft),
+    ...(listing.remarks ? { remarks: listing.remarks } : {}),
   }));
   updateSession(sessionId, { listingPreviews: previews });
 
