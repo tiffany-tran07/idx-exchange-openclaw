@@ -1,19 +1,27 @@
-import { query } from "./mySQL_connector.ts";
+import { query } from "./mySQL_connector.js";
+import type { PropertyCriteria } from "./session_memory.js";
 
-export async function searchActiveListings(filters: PropertyFilters, page = 1, limit = 10) {
+interface ActiveListingRow {
+  id: string | number;
+  address: string;
+  price: string | number;
+  beds: string | number;
+  baths: string | number;
+  sqft: string | number;
+}
+
+type ListingFilters = PropertyCriteria & { hasView?: boolean };
+
+export async function searchActiveListings(filters: ListingFilters, page = 1, limit = 5) {
   const offset = (page - 1) * limit;
   let sql = `
      SELECT
-        L_ListingID, L_DisplayId, L_Address, L_City, L_Zip,
-        L_SystemPrice AS price, L_Keyword2 AS beds, LM_Dec_3 AS baths,
-        LM_Int2_3 AS sqft, L_Type_ AS type, L_Status AS status,
-        LMD_MP_Latitude AS lat, LMD_MP_Longitude AS lng,
-        YearBuilt, AssociationFee, DaysOnMarket,
-        PoolPrivateYN, ViewYN, FireplaceYN, PhotoCount,
-        LA1_UserFirstName, LA1_UserLastName, LO1_OrganizationName
+        L_ListingID AS id, L_Address AS address,
+        L_SystemPrice AS price, L_Keyword2 AS beds,
+        LM_Dec_3 AS baths, LM_Int2_3 AS sqft
         FROM rets_property WHERE L_Status = "Active"
     `;
-  const params: any[] = [];
+  const params: Array<string | number> = [];
   if (filters.city) {
     sql += " AND LOWER(L_City) = LOWER(?)";
     params.push(filters.city);
@@ -49,7 +57,7 @@ export async function searchActiveListings(filters: PropertyFilters, page = 1, l
   sql += " ORDER BY L_SystemPrice ASC LIMIT ? OFFSET ?";
   params.push(limit, offset);
   // console.log("Executing SQL:", sql, "with params:", params);
-  return query<ListingRow>(sql, params);
+  return query<ActiveListingRow>(sql, params);
 }
 // if (process.argv[1] === new URL(import.meta.url).pathname) {
 //   const user_query = process.argv[2];

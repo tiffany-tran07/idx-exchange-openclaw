@@ -1,11 +1,15 @@
-export async function parsePropertyQuery(query: string) {
+import type { PropertyCriteria } from "./session_memory.js";
+
+export async function parsePropertyQuery(
+  query: string,
+): Promise<PropertyCriteria & { hasView?: boolean }> {
   const cityMatch = query.match(
     /in ([A-Za-z\s]+?)(?:\s+under|\s+with|\s+at|\s+that|\s+which|\s+for|\s+and|,|\?|\.|$)/i,
   );
   const priceMatch = query.match(/under \$?([\d,.]+)(k|m)?/i);
   const bedsMatch = query.match(/(\d+(?:\.5)?)[\s-]*(bed|beds|bedroom|bedrooms)/i);
   const bathsMatch = query.match(/(\d+(?:\.5)?)[\s-]*(bath|baths|bathroom)/i);
-  const sqftMatch = query.match(/(\d+)[\s,]*(sqft|sq ft|square feet)/i);
+  const sqftMatch = query.match(/([\d,]+)\s*(sqft|sq ft|square feet)/i);
   const poolMatch = /pool/i.test(query);
   const viewMatch = /view/i.test(query);
   const typeMap: Record<string, string> = {
@@ -15,21 +19,25 @@ export async function parsePropertyQuery(query: string) {
     land: "UnimprovedLand",
   };
   const typeKey = Object.keys(typeMap).find((k) => query.toLowerCase().includes(k));
-  let maxPrice = null;
+  let maxPrice: number | undefined;
   if (priceMatch) {
-    maxPrice = Number(priceMatch[1].replace(/,/g, ""));
-    if (priceMatch[2]?.toLowerCase() === "k") maxPrice *= 1000;
-    if (priceMatch[2]?.toLowerCase() === "m") maxPrice *= 1_000_000;
+    maxPrice = Number(priceMatch[1]!.replace(/,/g, ""));
+    if (priceMatch[2]?.toLowerCase() === "k") {
+      maxPrice *= 1000;
+    }
+    if (priceMatch[2]?.toLowerCase() === "m") {
+      maxPrice *= 1_000_000;
+    }
   }
   return {
-    city: cityMatch?.[1]?.trim() || null,
+    city: cityMatch?.[1]?.trim() || undefined,
     maxPrice,
-    beds: bedsMatch ? Math.ceil(Number(bedsMatch[1])) : null,
-    baths: bathsMatch ? Math.ceil(Number(bathsMatch[1])) : null,
-    sqft: sqftMatch ? Number(sqftMatch[1]) : null,
-    type: typeKey ? typeMap[typeKey] : null,
-    pool: poolMatch ? "True" : null,
-    hasView: viewMatch ? "True" : null,
+    beds: bedsMatch ? Math.ceil(Number(bedsMatch[1])) : undefined,
+    baths: bathsMatch ? Math.ceil(Number(bathsMatch[1])) : undefined,
+    sqft: sqftMatch ? Number(sqftMatch[1]!.replaceAll(",", "")) : undefined,
+    type: typeKey ? typeMap[typeKey] : undefined,
+    pool: poolMatch || undefined,
+    hasView: viewMatch || undefined,
   };
 }
 
