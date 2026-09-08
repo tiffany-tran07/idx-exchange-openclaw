@@ -13,19 +13,9 @@ import {
   runOpenClawStateWriteTransaction,
   type OpenClawStateDatabaseOptions,
 } from "./openclaw-state-db.js";
+import { createOpenClawStateSchemaEnsurer } from "./openclaw-state-feature-schema.js";
 
 type UserPreferencesDatabase = Pick<OpenClawStateKyselyDatabase, "user_preferences">;
-
-const ensuredDatabases = new WeakSet<DatabaseSync>();
-const USER_PREFERENCES_SCHEMA_SQL = `
-CREATE TABLE IF NOT EXISTS user_preferences (
-  profile_id TEXT NOT NULL,
-  pref_key TEXT NOT NULL,
-  value_json TEXT NOT NULL,
-  updated_at_ms INT NOT NULL,
-  PRIMARY KEY (profile_id, pref_key)
-) STRICT;
-`;
 
 type UserPreferenceError =
   | { code: "invalid-entry-count" }
@@ -36,20 +26,70 @@ type UserPreferenceError =
       currentCount: number;
     };
 
-function ensureUserPreferencesSchema(options: OpenClawStateDatabaseOptions = {}): void {
-  const database = openOpenClawStateDatabase(options);
-  if (ensuredDatabases.has(database.db)) {
+export const ensureUserPreferencesSchema = createOpenClawStateSchemaEnsurer({
+  table: "user_preferences",
+  operationLabel: "users.preferences.schema.ensure",
+});
+
+export function mutateUserPreference(
+  database: DatabaseSync,
+  profileId: string,
+  key: string,
+  value?: boolean,
+): void {
+  const db = getNodeSqliteKysely<UserPreferencesDatabase>(database);
+  if (value === undefined) {
+    if (tableExists(database, "user_preferences")) {
+      executeSqliteQuerySync(
+        database,
+        db
+          .deleteFrom("user_preferences")
+          .where("profile_id", "=", profileId)
+          .where("pref_key", "=", key),
+      );
+    }
     return;
   }
-  runOpenClawStateWriteTransaction(
-    ({ db }) => {
-      // sqlite-allow-raw -- feature-local additive schema DDL; preference rows use Kysely below.
-      db.exec(USER_PREFERENCES_SCHEMA_SQL);
-    },
-    options,
-    { operationLabel: "users.preferences.schema.ensure" },
+  const updatedAtMs = Date.now();
+  const valueJson = JSON.stringify(value);
+  executeSqliteQuerySync(
+    database,
+    db
+      .insertInto("user_preferences")
+      .values({
+        profile_id: profileId,
+        pref_key: key,
+        value_json: valueJson,
+        updated_at_ms: updatedAtMs,
+      })
+      .onConflict((conflict) =>
+        conflict.columns(["profile_id", "pref_key"]).doUpdateSet({
+          value_json: valueJson,
+          updated_at_ms: updatedAtMs,
+        }),
+      ),
   );
-  ensuredDatabases.add(database.db);
+}
+
+export function selectUserPreferenceValues(
+  database: DatabaseSync,
+  profileIds: readonly string[],
+  key: string,
+): Map<string, unknown> {
+  if (profileIds.length === 0 || !tableExists(database, "user_preferences")) {
+    return new Map();
+  }
+  const rows = executeSqliteQuerySync(
+    database,
+    getNodeSqliteKysely<UserPreferencesDatabase>(database)
+      .selectFrom("user_preferences")
+      .select(["profile_id", "value_json"])
+      .where("profile_id", "in", [...profileIds])
+      .where("pref_key", "=", key),
+  ).rows;
+  return new Map(
+    rows.map((row) => [row.profile_id, JSON.parse(row.value_json) as unknown] as const),
+  );
 }
 
 function openUserPreferencesDatabase(options: OpenClawStateDatabaseOptions = {}) {

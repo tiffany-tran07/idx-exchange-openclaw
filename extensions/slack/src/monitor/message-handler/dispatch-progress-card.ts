@@ -1,5 +1,5 @@
 import {
-  createChannelProgressReceiptTracker,
+  type createChannelProgressWorkCounter,
   formatChannelProgressDraftText,
   type ChannelProgressDraftCompositorSnapshot,
 } from "openclaw/plugin-sdk/channel-outbound";
@@ -8,6 +8,7 @@ import { logVerbose } from "openclaw/plugin-sdk/runtime-env";
 import { buildControlUiSessionPath } from "openclaw/plugin-sdk/session-discussion";
 import { createSlackDraftStream } from "../../draft-stream.js";
 import { formatSlackError } from "../../errors.js";
+import { normalizeSlackOutboundText } from "../../format.js";
 import { buildSlackProgressCardBlocks } from "../../progress-blocks.js";
 import { escapeSlackMrkdwn } from "../mrkdwn.js";
 import {
@@ -23,7 +24,7 @@ export function createSlackDraftProgressCardRuntime(params: {
   setup: Pick<SlackDispatchSetup, "account" | "cfg" | "ctx" | "prepared" | "slackClient">;
   draftStream: ReturnType<typeof createSlackDraftStream> | undefined;
   enabled: boolean;
-  progressReceipt: ReturnType<typeof createChannelProgressReceiptTracker>;
+  progressWorkCounter: ReturnType<typeof createChannelProgressWorkCounter> | undefined;
   progressSeed: string;
   explicitTitle: string | undefined;
   maxLineChars: number;
@@ -35,6 +36,13 @@ export function createSlackDraftProgressCardRuntime(params: {
   let finalStatus: Exclude<DraftProgressCardState, "working"> | undefined;
 
   const resolveSessionUrl = () => {
+    // Both conditions are the operator's own statement that this session is
+    // openable: `publicOrigin` is where the Gateway is externally reachable,
+    // and the Control UI is what serves the session route. Installations that
+    // set neither, or that replaced the Control UI, get no dead link.
+    if (cfg.gateway?.controlUi?.enabled === false) {
+      return undefined;
+    }
     const publicOrigin = resolveGatewayPublicOrigin(cfg);
     if (!publicOrigin) {
       return undefined;
@@ -62,6 +70,7 @@ export function createSlackDraftProgressCardRuntime(params: {
       formatLine: formatSlackProgressDraftLine,
       narration: snapshot.statusHeadline,
       plan: snapshot.plan,
+      diffStat: snapshot.diffStat,
     });
 
   const resolvePresentation = (
@@ -74,6 +83,8 @@ export function createSlackDraftProgressCardRuntime(params: {
       : snapshot.planExplanation && snapshot.planExplanation !== title
         ? snapshot.planExplanation
         : undefined;
+    const workCounter = state === "working" ? params.progressWorkCounter : undefined;
+    const sessionUrl = state === "working" ? undefined : resolveSessionUrl();
     return buildSlackProgressCardBlocks({
       state,
       title,
@@ -82,15 +93,9 @@ export function createSlackDraftProgressCardRuntime(params: {
       lines: resolveStructuredProgressLines(snapshot.lines),
       maxLineChars: params.maxLineChars,
       diffStat: snapshot.diffStat,
-      ...(state === "working"
-        ? {
-            toolCalls: params.progressReceipt.toolCalls,
-            elapsedSeconds: params.progressReceipt.elapsedSeconds,
-          }
-        : {
-            receiptSummary: params.progressReceipt.buildSummaryLine(),
-            sessionUrl: resolveSessionUrl(),
-          }),
+      toolCalls: workCounter?.toolCalls,
+      elapsedSeconds: workCounter?.elapsedSeconds,
+      sessionUrl,
     });
   };
 
@@ -102,6 +107,7 @@ export function createSlackDraftProgressCardRuntime(params: {
     if (!params.draftStream || !params.enabled) {
       return false;
     }
+    await params.draftStream.dropDetachedMessages();
     const terminalStatus = finalStatus === "error" || status === "error" ? "error" : "success";
     if (finalStatus === terminalStatus) {
       return true;
@@ -137,9 +143,13 @@ export function createSlackDraftProgressCardRuntime(params: {
   };
 
   return {
+    resolveSessionUrl,
     resolveText,
     resolvePresentation,
     finalize,
+    get hasTerminalized() {
+      return finalStatus !== undefined;
+    },
     setFallbackText(text: string) {
       latestFallbackText = text;
     },
@@ -160,20 +170,10 @@ export function formatSlackProgressDraftLine(line: string): string {
     return escapeSlackMrkdwn(line);
   }
 
-  const content = italicCommentary[1]!
-    .split(/(`[^`\n]+`)/u)
-    .map((segment, index) => {
-      if (index % 2 === 0) {
-        return escapeSlackMrkdwn(segment);
-      }
-      const code = segment
-        .slice(1, -1)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-      return `\`${code}\``;
-    })
-    .join("");
+  const content = normalizeSlackOutboundText(italicCommentary[1]!, {
+    mentions: "escape",
+    enclosingStyle: "italic",
+  });
 
   return `_${content}_`;
 }

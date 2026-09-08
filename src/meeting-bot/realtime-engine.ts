@@ -48,6 +48,7 @@ export type MeetingRealtimeEngineConfig = {
   chrome: { audioFormat: MeetingRealtimeAudioFormat };
   realtime: {
     strategy: string;
+    agentId?: string;
     provider?: string;
     transcriptionProvider?: string;
     voiceProvider?: string;
@@ -63,6 +64,8 @@ export type MeetingAgentConsultParams = {
   requesterSessionKey?: string;
   args: unknown;
   transcript: Array<{ role: "user" | "assistant"; text: string }>;
+  /** Meeting-owned cancellation for the active consult. */
+  abortSignal?: AbortSignal;
 };
 
 export type MeetingRealtimeToolCallParams = {
@@ -438,12 +441,13 @@ export async function startMeetingRealtimeEngine(params: {
       logPrefix: `${params.platform.logScope} ${realtimeLogScope} agent`,
       responseStyle: "Brief, natural spoken answer for a live meeting.",
       fallbackText: "I hit an error while checking that. Please try again.",
-      consult: ({ question, responseStyle }) =>
+      consult: ({ question, responseStyle, signal }) =>
         params.consultAgent({
           meetingSessionId: params.meetingSessionId,
           requesterSessionKey: params.requesterSessionKey,
           args: { question, responseStyle },
           transcript: harness.transcript,
+          abortSignal: signal,
         }),
       deliver: (text) => {
         bridge?.sendUserMessage(buildMeetingSpeakExactUserMessage(text));
@@ -485,6 +489,7 @@ export async function startMeetingRealtimeEngine(params: {
     bridge = harness.createBridge({
       provider: resolved.provider,
       cfg: params.fullConfig,
+      agentId: params.config.realtime.agentId,
       providerConfig: resolved.providerConfig,
       audioFormat: resolveMeetingRealtimeAudioFormat(params.config.chrome.audioFormat),
       instructions: params.config.realtime.instructions,
@@ -580,6 +585,7 @@ export async function startMeetingRealtimeEngine(params: {
           harness,
         }),
       onError: (error) => {
+        // Provider errors may be recoverable; onClose owns terminal teardown.
         harness.emit({
           type: "session.error",
           payload: { message: formatErrorMessage(error) },
@@ -588,7 +594,6 @@ export async function startMeetingRealtimeEngine(params: {
         params.logger.warn(
           `${params.platform.logScope} ${realtimeLogScope} voice bridge failed: ${formatErrorMessage(error)}`,
         );
-        stopAfterFailure("voice bridge");
       },
       onClose: (reason) => {
         outputGenerationActive = false;

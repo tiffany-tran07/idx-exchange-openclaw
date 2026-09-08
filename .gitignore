@@ -205,6 +205,7 @@ changelog/fragments/
 .mypy_cache/
 .vmux*
 .artifacts/
+.amp/portals/
 .openclaw-config-doc-cache/
 openclaw-path-alias-*/
 /.pi/
@@ -233,6 +234,7 @@ extensions/discord/assets/embedded-app-sdk.mjs
 /.crabbox-artifacts
 .comux*
 
+<<<<<<< HEAD
 # virtual env
 venv/
 
@@ -240,3 +242,7 @@ idx_exchange/
 
 # Local OpenClaw state overrides (normally stored outside the repository)
 /.openclaw/**/*.sqlite*
+=======
+# Pinned Swift lint/format tools installed by scripts/install-swift-tools.sh
+.build/
+>>>>>>> 8ac88a1a335aa5f6ec467e539f6bbce3df478d84

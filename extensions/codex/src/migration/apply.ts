@@ -28,11 +28,9 @@ import type {
 import { sleep } from "openclaw/plugin-sdk/runtime-env";
 import { uniqueStrings } from "openclaw/plugin-sdk/string-coerce-runtime";
 import { defaultCodexAppInventoryCache } from "../app-server/app-inventory-cache.js";
-import {
-  resolveCodexAppServerAuthAccountCacheKey,
-  resolveCodexAppServerAuthProfileIdForAgent,
-  resolveCodexAppServerFallbackApiKeyCacheKey,
-} from "../app-server/auth-bridge.js";
+import { resolveCodexAppServerAuthAccountCacheKey } from "../app-server/auth-bridge.js";
+import { resolveCodexAppServerFallbackApiKeyCacheKey } from "../app-server/auth-cache-key.js";
+import { resolveCodexAppServerAuthProfileIdForAgent } from "../app-server/auth-profile.js";
 import {
   CODEX_PLUGINS_MARKETPLACE_NAME,
   readCodexPluginConfig,
@@ -49,8 +47,8 @@ import {
 } from "../app-server/shared-client.js";
 import { codexPluginActivationReportState, sanitizeAppsNeedingAuth } from "./apply-report.js";
 import { applyCodexAuthItems, type CodexAuthSource } from "./auth.js";
-import { buildCodexMigrationPlan } from "./plan.js";
 import {
+  buildCodexMigrationPlan,
   buildCodexPluginsConfigValue,
   CODEX_PLUGIN_CONFIG_ITEM_ID,
   CODEX_PLUGIN_CONFIG_PATH,
