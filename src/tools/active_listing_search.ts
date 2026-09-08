@@ -8,6 +8,7 @@ interface ActiveListingRow {
   beds: string | number;
   baths: string | number;
   sqft: string | number;
+  remarks?: string | null;
 }
 
 type ListingFilters = PropertyCriteria & { hasView?: boolean };
@@ -18,7 +19,7 @@ export async function searchActiveListings(filters: ListingFilters, page = 1, li
      SELECT
         L_ListingID AS id, L_Address AS address,
         L_SystemPrice AS price, L_Keyword2 AS beds,
-        LM_Dec_3 AS baths, LM_Int2_3 AS sqft
+        LM_Dec_3 AS baths, LM_Int2_3 AS sqft, L_Remarks AS remarks
         FROM rets_property WHERE L_Status = "Active"
     `;
   const params: Array<string | number> = [];

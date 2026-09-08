@@ -23,5 +23,6 @@ export function recommendationAgent(
       `(${recommendation.beds} bd, ${recommendation.baths} ba, ${recommendation.sqft.toLocaleString()} sqft). ` +
       "This ranking favors lower price, then more space; confirm condition, fees, and disclosures before deciding.",
     recommendation,
+    recommendations: ranked,
   };
 }
