@@ -1,6 +1,11 @@
+import { formatPropertyResponse } from "./message_handler.js";
 import { clearSession, getSession } from "./session_memory.js";
 
 type Intent = "search" | "market" | "recommend" | "knowledge" | "mixed";
+
+function formatResult<T extends { response: string }>(result: T): T {
+  return { ...result, response: formatPropertyResponse(result) };
+}
 
 export async function classifyIntent(query: string): Promise<Intent> {
   const q = query.toLowerCase().trim();
@@ -68,7 +73,7 @@ export async function classifyIntent(query: string): Promise<Intent> {
 export async function orchestrate(query: string, sessionId: string) {
   if (/\breset my property search\b/i.test(query)) {
     clearSession(sessionId);
-    return { response: "Your property search has been reset for this conversation." };
+    return formatResult({ response: "Your property search has been reset for this conversation." });
   }
 
   const intent = await classifyIntent(query);
@@ -77,27 +82,27 @@ export async function orchestrate(query: string, sessionId: string) {
       const { runRequirementsAgent } = await import("../agents/requirements_agent.js");
       const requirements = await runRequirementsAgent(query, sessionId);
       if (!requirements.isComplete) {
-        return {
+        return formatResult({
           response: `I'm setting up your search. I still need: ${requirements.missingFields.join(", ")}.`,
           action: "request_missing_info",
           missing: requirements.missingFields,
-        };
+        });
       }
       const { runListingAgent } = await import("../agents/listing_agent.js");
-      return await runListingAgent(sessionId);
+      return formatResult(await runListingAgent(sessionId));
     }
     case "market": {
       const { runMarketStatsAgent } = await import("../agents/market_stats_agent.js");
-      return await runMarketStatsAgent(query, sessionId);
+      return formatResult(await runMarketStatsAgent(query, sessionId));
     }
     case "recommend": {
       const { recommendationAgent } = await import("../agents/recommendation_agent.js");
       const session = getSession(sessionId);
-      return recommendationAgent(session.listingPreviews, session.criteria);
+      return formatResult(recommendationAgent(session.listingPreviews, session.criteria));
     }
     case "knowledge": {
       const { runRagAgent } = await import("../agents/rag_agent.js");
-      return await runRagAgent(query, sessionId);
+      return formatResult(await runRagAgent(query, sessionId));
     }
     case "mixed": {
       const [{ runListingAgent }, { runMarketStatsAgent }, { runRequirementsAgent }] =
@@ -109,18 +114,18 @@ export async function orchestrate(query: string, sessionId: string) {
       const requirements = await runRequirementsAgent(query, sessionId);
       const stats = await runMarketStatsAgent(query, sessionId);
       if (!requirements.isComplete) {
-        return {
+        return formatResult({
           response: `${stats.response}\n\nFor a listing search, I still need: ${requirements.missingFields.join(", ")}.`,
           missing: requirements.missingFields,
-        };
+        });
       }
       const listings = await runListingAgent(sessionId);
-      return { response: `${listings.response}\n\n${stats.response}` };
+      return formatResult({ response: `${listings.response}\n\n${stats.response}` });
     }
     default:
-      return {
+      return formatResult({
         response:
           "I'm not sure how to help with that. Try asking about properties or market trends.",
-      };
+      });
   }
 }
