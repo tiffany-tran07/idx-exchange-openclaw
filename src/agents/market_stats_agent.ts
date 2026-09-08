@@ -1,19 +1,15 @@
-import { exec } from "child_process";
-import util from "util";
-import { get_market_summary } from "../tools/city_market_summary";
-import { parsePropertyQuery } from "../tools/property_parser";
-import { getSession, updateSession } from "../tools/session_memory";
+import { getMarketSummary } from "../tools/city_market_summary.js";
+import { parsePropertyQuery } from "../tools/property_parser.js";
+import { getSession, updateSession } from "../tools/session_memory.js";
 
-const execPromise = util.promisify(exec);
-
-export async function runMarketStatsAgent(query: string, userId: string) {
+export async function runMarketStatsAgent(query: string, sessionId: string) {
   const newCriteria = await parsePropertyQuery(query);
   if (newCriteria.city) {
-    updateSession(userId, { city: newCriteria.city });
+    updateSession(sessionId, { criteria: { city: newCriteria.city } });
   }
 
-  const session = getSession(userId);
-  const city = session.city;
+  const session = getSession(sessionId);
+  const city = session.criteria.city;
 
   if (!city) {
     return {
@@ -22,15 +18,23 @@ export async function runMarketStatsAgent(query: string, userId: string) {
   }
 
   try {
-    // Run analysis tools
-    const summary = await get_market_summary();
-    const { stdout: trends } = await execPromise(`python3 src/tools/trend_analysis.py "${city}"`);
+    const summary = await getMarketSummary(city);
+    if (!summary) {
+      return { response: `I couldn't find trailing-12-month sold data for ${city}.` };
+    }
+    updateSession(sessionId, { marketSummary: summary });
 
     return {
-      response: `Here is the market summary for ${city}:\n${JSON.stringify(summary)}\n\nTrends:\n${trends}`,
+      response:
+        `${summary.city}, ${summary.period.toLowerCase()}: ` +
+        `${summary.soldCount.toLocaleString()} sales; average price $${summary.averagePrice.toLocaleString()}; ` +
+        `$${summary.pricePerSqft.toLocaleString()}/sqft; ${summary.daysOnMarket} average days on market; ` +
+        `${summary.listToCloseRatio}% list-to-close ratio.`,
+      summary,
     };
   } catch (err) {
-    console.error("Market Stats Agent error:", err);
+    const detail = err instanceof Error ? err.message || err.name : String(err);
+    console.error(`Market stats unavailable: ${detail}`);
     return {
       response: `I encountered an issue retrieving market stats for ${city}.`,
     };

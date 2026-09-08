@@ -1,31 +1,48 @@
-import { query } from "./mySQL_connector.ts";
+import { query } from "./mySQL_connector.js";
+import type { MarketSummary } from "./session_memory.js";
 
-export async function get_market_summary() {
+interface MarketSummaryRow {
+  city: string;
+  sold_count: string | number;
+  average_price: string | number;
+  price_per_sqft: string | number;
+  days_on_market: string | number;
+  list_to_close_ratio: string | number;
+}
+
+function numeric(value: string | number): number {
+  return Number(value);
+}
+
+export async function getMarketSummary(city: string): Promise<MarketSummary | undefined> {
   const sql = `
     SELECT
-        City,
+        City AS city,
         COUNT(*) AS sold_count,
-            ROUND(AVG(ClosePrice), 0) AS avg_close_price,
-            ROUND(AVG(ClosePrice / NULLIF(LivingArea,0)),0) AS avg_price_per_sqft,
-            ROUND(AVG(DaysOnMarket), 1) AS avg_dom,
-            ROUND(AVG(ClosePrice / NULLIF(ListPrice,0)) * 100, 1) AS list_to_close_pct
+            ROUND(AVG(ClosePrice), 0) AS average_price,
+            ROUND(AVG(ClosePrice / NULLIF(LivingArea,0)),0) AS price_per_sqft,
+            ROUND(AVG(DaysOnMarket), 1) AS days_on_market,
+            ROUND(AVG(ClosePrice / NULLIF(ListPrice,0)) * 100, 1) AS list_to_close_ratio
         FROM california_sold
         WHERE PropertyType = 'Residential'
+            AND LOWER(City) = LOWER(?)
             AND CloseDate >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
             AND LivingArea > 0
         GROUP BY City
-        ORDER BY sold_count DESC
-        LIMIT 25
+        LIMIT 1
         ;
     `;
-  return query<MarketSummary>(sql, []);
+  const [row] = await query<MarketSummaryRow>(sql, [city]);
+  if (!row) {
+    return undefined;
+  }
+  return {
+    city: row.city,
+    period: "Trailing 12 months",
+    soldCount: numeric(row.sold_count),
+    averagePrice: numeric(row.average_price),
+    pricePerSqft: numeric(row.price_per_sqft),
+    daysOnMarket: numeric(row.days_on_market),
+    listToCloseRatio: numeric(row.list_to_close_ratio),
+  };
 }
-
-// try {
-//   const marketSummary = await get_market_summary();
-//   console.log(JSON.stringify(marketSummary));
-// } catch (err) {
-//   console.error("Failed to retrieve market summary");
-// } finally {
-//   process.exit(0);
-// }

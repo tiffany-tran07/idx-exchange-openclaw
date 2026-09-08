@@ -1,4 +1,24 @@
-import { query } from "./mySQL_connector.ts";
+import { query } from "./mySQL_connector.js";
+
+interface SoldComparableRow {
+  ListingKey: string;
+  UnparsedAddress: string;
+  City: string;
+  CloseDate: Date | string;
+  ClosePrice: number;
+  OriginalListPrice: number;
+  ListPrice: number;
+  DaysOnMarket: number;
+  BedroomsTotal: number;
+  BathroomsTotalInteger: number;
+  LivingArea: number;
+  PropertyType: string;
+  PropertySubType: string;
+  YearBuilt: number;
+  ListAgentFullName: string;
+  ListOfficeName: string;
+  BuyerOfficeName: string;
+}
 
 export async function getSoldComps(city: string, months = 12) {
   const sql = `
@@ -15,7 +35,7 @@ export async function getSoldComps(city: string, months = 12) {
     ORDER BY CloseDate DESC
     LIMIT 50
 `;
-  return query<SoldRow>(sql, [city, months]);
+  return query<SoldComparableRow>(sql, [city, months]);
 }
 
 // const city = process.argv[2];
