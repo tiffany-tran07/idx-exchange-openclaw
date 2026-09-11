@@ -1,0 +1,168 @@
+{"kind":"deck","id":"pr/oo9hay","name":"Deck"}
+{"kind":"layout","layoutId":"f86c4791-9f2b-4951-b171-d22b634d7933","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"b5dbcf20-8a3e-49a7-899c-e6d97a348bf2","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/dnpcwo","slide":1,"title":"OPENCLAW / PRODUCT WORKFLOW","textShapes":4}
+{"kind":"shape","id":"sh/1c7qpcbi","slide":1,"bbox":[835,-120,540,540]}
+{"kind":"shape","id":"sh/e9w7uhc7","slide":1,"bbox":[1010,400,360,360]}
+{"kind":"textbox","id":"sh/fap8nmtc","slide":1,"text":"OPENCLAW / PRODUCT WORKFLOW","textPreview":"OPENCLAW / PRODUCT WORKFLOW","textChars":27,"textLines":1,"bbox":[72,76,500,24]}
+{"kind":"textbox","id":"sh/s7eps7u1","slide":1,"text":"Housing search +\nemail workflows","textPreview":"Housing search + | email workflows","textChars":32,"textLines":2,"bbox":[72,170,700,170]}
+{"kind":"textbox","id":"sh/t8nqlcbm","slide":1,"text":"How OpenClaw turns a natural-language request into a stateful property workflow, then holds the line at the email approval boundary.","textPreview":"How OpenClaw turns a natural-language request into a stateful property workflow, then holds the line at the email approval boundary.","textChars":132,"textLines":1,"bbox":[76,390,650,78]}
+{"kind":"textbox","id":"sh/65w7qxcv","slide":1,"text":"Repository summary  •  September 2026","textPreview":"Repository summary  •  September 2026","textChars":37,"textLines":1,"bbox":[76,596,520,24]}
+{"kind":"notes","id":"nt/dnpcwo","slide":1,"text":"Sources: VISION.md; .agents/skills/property-search-orchestrator/SKILL.md; .agents/skills/property-email-workflows/SKILL.md."}
+{"kind":"slide","id":"sl/q0ropd","slide":2,"title":"THE OPENCLAW ROLE","textShapes":14}
+{"kind":"textbox","id":"sh/crq1grut","slide":2,"text":"THE OPENCLAW ROLE","textPreview":"THE OPENCLAW ROLE","textChars":17,"textLines":1,"bbox":[72,40,400,24]}
+{"kind":"textbox","id":"sh/bqh0nmd8","slide":2,"text":"OpenClaw is the execution layer","textPreview":"OpenClaw is the execution layer","textChars":31,"textLines":1,"bbox":[72,70,1136,56]}
+{"kind":"textbox","id":"sh/q58jehcn","slide":2,"text":"The user speaks once. OpenClaw routes the request, carries session state, and keeps side effects explicit.","textPreview":"The user speaks once. OpenClaw routes the request, carries session state, and keeps side effects explicit.","textChars":106,"textLines":1,"bbox":[72,130,1136,38]}
+{"kind":"shape","id":"sh/lwj2twva","slide":2,"bbox":[72,230,310,170]}
+{"kind":"textbox","id":"sh/0va1krup","slide":2,"text":"OPENCLAW GATEWAY","textPreview":"OPENCLAW GATEWAY","textChars":16,"textLines":1,"bbox":[90,244,274,24]}
+{"kind":"textbox","id":"sh/zu1kr6d4","slide":2,"text":"One sessionId\nOne conversation context\nChannel-agnostic execution","textPreview":"One sessionId | One conversation context | Channel-agnostic execution","textChars":65,"textLines":3,"bbox":[90,276,274,114]}
+{"kind":"shape","id":"sh/ytsji1cj","slide":2,"bbox":[470,220,300,150]}
+{"kind":"textbox","id":"sh/9032xgv6","slide":2,"text":"PROPERTY WORKFLOW","textPreview":"PROPERTY WORKFLOW","textChars":17,"textLines":1,"bbox":[488,234,264,24]}
+{"kind":"textbox","id":"sh/8zu1obu1","slide":2,"text":"Intent routing\nCriteria collection\nListings + market data","textPreview":"Intent routing | Criteria collection | Listings + market data","textChars":57,"textLines":3,"bbox":[488,266,264,94]}
+{"kind":"shape","id":"sh/2tw7mxwf","slide":2,"bbox":[470,410,300,150]}
+{"kind":"textbox","id":"sh/3u5ov2dk","slide":2,"text":"EMAIL WORKFLOW","textPreview":"EMAIL WORKFLOW","textChars":14,"textLines":1,"bbox":[488,424,264,24]}
+{"kind":"textbox","id":"sh/ofepo7e5","slide":2,"text":"Reviewable draft\nExact approval phrase\nSingle delivery","textPreview":"Reviewable draft | Exact approval phrase | Single delivery","textChars":54,"textLines":3,"bbox":[488,456,264,94]}
+{"kind":"shape","id":"sh/pgn6xsvq","slide":2,"bbox":[865,292,300,150]}
+{"kind":"textbox","id":"sh/qhg7qxwb","slide":2,"text":"USER OUTCOME","textPreview":"USER OUTCOME","textChars":12,"textLines":1,"bbox":[883,306,264,24]}
+{"kind":"textbox","id":"sh/bipoz2dw","slide":2,"text":"A useful answer\nwith a visible action boundary","textPreview":"A useful answer | with a visible action boundary","textChars":46,"textLines":2,"bbox":[883,338,264,94]}
+{"kind":"shape","id":"sh/cjyps7eh","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/dk7q1cv2","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/6lc7edw7","slide":2,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/rmlonixs","slide":2,"bbox":[0,0,0,0]}
+{"kind":"textbox","id":"sh/behcza98","slide":2,"text":"Session memory is the shared spine","textPreview":"Session memory is the shared spine","textChars":34,"textLines":1,"bbox":[410,594,450,28]}
+{"kind":"shape","id":"sh/at8v658n","slide":2,"bbox":[72,680,1136,0]}
+{"kind":"textbox","id":"sh/xgzu1k7e","slide":2,"text":"OpenClaw  /  housing workflows","textPreview":"OpenClaw  /  housing workflows","textChars":30,"textLines":1,"bbox":[72,688,360,18]}
+{"kind":"textbox","id":"sh/wfqd8fqt","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1160,688,48,18]}
+{"kind":"notes","id":"nt/q0ropd","slide":2,"text":"Sources: VISION.md (OpenClaw runs tasks in channels with rules; plugin-agnostic core); .agents/skills/property-search-orchestrator/SKILL.md (canonical sessionId); .agents/skills/property-email-workflows/SKILL.md (draft and approval boundary)."}
+{"kind":"slide","id":"sl/25njf6","slide":3,"title":"HOUSING WORKFLOW","textShapes":15}
+{"kind":"textbox","id":"sh/pkre50va","slide":3,"text":"HOUSING WORKFLOW","textPreview":"HOUSING WORKFLOW","textChars":16,"textLines":1,"bbox":[72,40,400,24]}
+{"kind":"textbox","id":"sh/2h0valwz","slide":3,"text":"A property request becomes structured work","textPreview":"A property request becomes structured work","textChars":42,"textLines":1,"bbox":[72,70,1136,56]}
+{"kind":"textbox","id":"sh/ni9w3qdk","slide":3,"text":"The orchestrator owns the handoff between requirements, listings, market context, recommendations, and knowledge.","textPreview":"The orchestrator owns the handoff between requirements, listings, market context, recommendations, and knowledge.","textChars":113,"textLines":1,"bbox":[72,130,1136,38]}
+{"kind":"shape","id":"sh/cn2dgvu1","slide":3,"bbox":[72,235,188,205]}
+{"kind":"textbox","id":"sh/xobe90vm","slide":3,"text":"01  CLASSIFY","textPreview":"01  CLASSIFY","textChars":12,"textLines":1,"bbox":[90,249,152,24]}
+{"kind":"textbox","id":"sh/al0ve5wv","slide":3,"text":"search\nmarket\nrecommend\nmixed\nknowledge","textPreview":"search | market | recommend | mixed | knowledge","textChars":39,"textLines":5,"bbox":[90,281,152,149]}
+{"kind":"shape","id":"sh/bm9w7qdg","slide":3,"bbox":[318,235,230,205]}
+{"kind":"textbox","id":"sh/kr2dkfux","slide":3,"text":"02  REMEMBER","textPreview":"02  REMEMBER","textChars":12,"textLines":1,"bbox":[336,249,194,24]}
+{"kind":"textbox","id":"sh/lsbedkvi","slide":3,"text":"Merge criteria into the\ncurrent sessionId. Ask only\nfor missing search fields.","textPreview":"Merge criteria into the | current sessionId. Ask only | for missing search fields.","textChars":78,"textLines":3,"bbox":[336,281,194,149]}
+{"kind":"shape","id":"sh/hgbi5sja","slide":3,"bbox":[606,235,230,205]}
+{"kind":"textbox","id":"sh/gf21wn2p","slide":3,"text":"03  RETRIEVE","textPreview":"03  RETRIEVE","textChars":12,"textLines":1,"bbox":[624,249,194,24]}
+{"kind":"textbox","id":"sh/fet03i1k","slide":3,"text":"Listings from rets_property\nMarket stats from\ncalifornia_sold","textPreview":"Listings from rets_property | Market stats from | california_sold","textChars":61,"textLines":3,"bbox":[624,281,194,149]}
+{"kind":"shape","id":"sh/udkjudkz","slide":3,"bbox":[894,235,314,205]}
+{"kind":"textbox","id":"sh/pkvi9sjm","slide":3,"text":"04  RESPOND","textPreview":"04  RESPOND","textChars":11,"textLines":1,"bbox":[912,249,278,24]}
+{"kind":"textbox","id":"sh/4jm10n21","slide":3,"text":"Save listing previews and\nmarket summaries. Format the\nanswer for the channel.","textPreview":"Save listing previews and | market summaries. Format the | answer for the channel.","textChars":78,"textLines":3,"bbox":[912,281,278,149]}
+{"kind":"shape","id":"sh/3id07i1g","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/2h4jyxkv","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/lorix8j2","slide":3,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/knih432x","slide":3,"bbox":[72,500,1136,85]}
+{"kind":"textbox","id":"sh/crm1k3ad","slide":3,"text":"Contract","textPreview":"Contract","textChars":8,"textLines":1,"bbox":[96,521,120,24]}
+{"kind":"textbox","id":"sh/xsvid8ry","slide":3,"text":"The live Gateway calls property_search with the unchanged user message and the canonical sessionId. The isolated CLI is reserved for smoke tests.","textPreview":"The live Gateway calls property_search with the unchanged user message and the canonical sessionId. The isolated CLI is reserved for smok...","textChars":145,"textLines":1,"bbox":[238,515,915,48]}
+{"kind":"shape","id":"sh/a54jitsn","slide":3,"bbox":[72,680,1136,0]}
+{"kind":"textbox","id":"sh/b6d0by98","slide":3,"text":"OpenClaw  /  housing workflows","textPreview":"OpenClaw  /  housing workflows","textChars":30,"textLines":1,"bbox":[72,688,360,18]}
+{"kind":"textbox","id":"sh/kv61onap","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1160,688,48,18]}
+{"kind":"notes","id":"nt/25njf6","slide":3,"text":"Sources: .agents/skills/property-search-orchestrator/SKILL.md; src/tools/orchestrate.ts; src/agents/tools/property-search-tool.ts."}
+{"kind":"slide","id":"sl/ehgh61","slide":4,"title":"INTENT ROUTING","textShapes":15}
+{"kind":"textbox","id":"sh/byhszilo","slide":4,"text":"INTENT ROUTING","textPreview":"INTENT ROUTING","textChars":14,"textLines":1,"bbox":[72,40,400,24]}
+{"kind":"textbox","id":"sh/czqtsn29","slide":4,"text":"The same conversation can move across housing intents","textPreview":"The same conversation can move across housing intents","textChars":53,"textLines":1,"bbox":[72,70,1136,56]}
+{"kind":"textbox","id":"sh/d0ja1s3u","slide":4,"text":"Routing stays deterministic at the boundary, while session memory preserves continuity between turns.","textPreview":"Routing stays deterministic at the boundary, while session memory preserves continuity between turns.","textChars":101,"textLines":1,"bbox":[72,130,1136,38]}
+{"kind":"shape","id":"sh/y1sbuxkf","slide":4,"bbox":[72,282,280,122]}
+{"kind":"textbox","id":"sh/z21s3il0","slide":4,"text":"USER MESSAGE","textPreview":"USER MESSAGE","textChars":12,"textLines":1,"bbox":[90,296,244,24]}
+{"kind":"textbox","id":"sh/03atwn2l","slide":4,"text":"“Find a 3-bed in Oakland\nand tell me the market trend”","textPreview":"“Find a 3-bed in Oakland | and tell me the market trend”","textChars":54,"textLines":2,"bbox":[90,328,244,66]}
+{"kind":"shape","id":"sh/l4ja5s3q","slide":4,"bbox":[458,298,190,90]}
+{"kind":"textbox","id":"sh/e5oritkv","slide":4,"text":"CLASSIFY","textPreview":"CLASSIFY","textChars":8,"textLines":1,"bbox":[476,312,154,24]}
+{"kind":"textbox","id":"sh/f6xsrylg","slide":4,"text":"mixed","textPreview":"mixed","textChars":5,"textLines":1,"bbox":[476,344,154,34]}
+{"kind":"shape","id":"sh/b69czu58","slide":4,"bbox":[815,205,330,92]}
+{"kind":"textbox","id":"sh/a50b6pon","slide":4,"text":"LISTINGS","textPreview":"LISTINGS","textChars":8,"textLines":1,"bbox":[833,219,294,24]}
+{"kind":"textbox","id":"sh/x8ru1kny","slide":4,"text":"Requirements → listing agent","textPreview":"Requirements → listing agent","textChars":28,"textLines":1,"bbox":[833,251,294,36]}
+{"kind":"shape","id":"sh/c7it8z6d","slide":4,"bbox":[815,355,330,92]}
+{"kind":"textbox","id":"sh/n2pcva5w","slide":4,"text":"MARKET","textPreview":"MARKET","textChars":6,"textLines":1,"bbox":[833,369,294,24]}
+{"kind":"textbox","id":"sh/21gb25ob","slide":4,"text":"City → market stats agent","textPreview":"City → market stats agent","textChars":25,"textLines":1,"bbox":[833,401,294,36]}
+{"kind":"shape","id":"sh/p47uxkn2","slide":4,"bbox":[390,500,520,86]}
+{"kind":"textbox","id":"sh/o3yt4f6h","slide":4,"text":"SESSION MEMORY","textPreview":"SESSION MEMORY","textChars":14,"textLines":1,"bbox":[408,514,484,24]}
+{"kind":"textbox","id":"sh/fepsra50","slide":4,"text":"criteria + listingPreviews + market summaries","textPreview":"criteria + listingPreviews + market summaries","textChars":45,"textLines":1,"bbox":[408,546,484,30]}
+{"kind":"shape","id":"sh/edgby5of","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/i9wva587","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/3a5c3a9s","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/4bedcvqd","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/5cnu50ry","slide":4,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/qdgve58j","slide":4,"bbox":[72,680,1136,0]}
+{"kind":"textbox","id":"sh/rypc7a9o","slide":4,"text":"OpenClaw  /  housing workflows","textPreview":"OpenClaw  /  housing workflows","textChars":30,"textLines":1,"bbox":[72,688,360,18]}
+{"kind":"textbox","id":"sh/szydgfq9","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1160,688,48,18]}
+{"kind":"notes","id":"nt/ehgh61","slide":4,"text":"Sources: src/tools/orchestrate.ts (search, market, recommend, knowledge, mixed); .agents/skills/property-search-orchestrator/SKILL.md (agent map and session memory)."}
+{"kind":"slide","id":"sl/8kh4m7","slide":5,"title":"EMAIL WORKFLOW","textShapes":15}
+{"kind":"textbox","id":"sh/5gnehc76","slide":5,"text":"EMAIL WORKFLOW","textPreview":"EMAIL WORKFLOW","textChars":14,"textLines":1,"bbox":[72,40,400,24]}
+{"kind":"textbox","id":"sh/idwvmxov","slide":5,"text":"Email is a two-step side effect","textPreview":"Email is a two-step side effect","textChars":31,"textLines":1,"bbox":[72,70,1136,56]}
+{"kind":"textbox","id":"sh/3e5wf2p0","slide":5,"text":"OpenClaw can prepare a useful property email, but delivery stops until the person approves the exact draft.","textPreview":"OpenClaw can prepare a useful property email, but delivery stops until the person approves the exact draft.","textChars":107,"textLines":1,"bbox":[72,130,1136,38]}
+{"kind":"shape","id":"sh/s3edsr6x","slide":5,"bbox":[72,240,255,200]}
+{"kind":"textbox","id":"sh/d4nelw7i","slide":5,"text":"01  DRAFT","textPreview":"01  DRAFT","textChars":9,"textLines":1,"bbox":[90,254,219,24]}
+{"kind":"textbox","id":"sh/qhwvqhor","slide":5,"text":"email_draft\nValidate recipient\nClassify original query\nBuild content from session/data","textPreview":"email_draft | Validate recipient | Classify original query | Build content from session/data","textChars":86,"textLines":4,"bbox":[90,286,219,144]}
+{"kind":"shape","id":"sh/r25wjmpc","slide":5,"bbox":[382,240,255,200]}
+{"kind":"textbox","id":"sh/07yxwr6t","slide":5,"text":"02  REVIEW","textPreview":"02  REVIEW","textChars":10,"textLines":1,"bbox":[400,254,219,24]}
+{"kind":"textbox","id":"sh/187epw7e","slide":5,"text":"Show recipient, workflow,\nsubject, and body summary\nStatus: pending_approval","textPreview":"Show recipient, workflow, | subject, and body summary | Status: pending_approval","textChars":76,"textLines":3,"bbox":[400,286,219,144]}
+{"kind":"shape","id":"sh/h8bmxcji","slide":5,"bbox":[692,240,255,200]}
+{"kind":"textbox","id":"sh/g725472x","slide":5,"text":"03  APPROVE","textPreview":"03  APPROVE","textChars":11,"textLines":1,"bbox":[710,254,219,24]}
+{"kind":"textbox","id":"sh/f694vm1c","slide":5,"text":"Require exact text:\n“I approve sending this email”\nUse the exact approval_id","textPreview":"Require exact text: | “I approve sending this email” | Use the exact approval_id","textChars":76,"textLines":3,"bbox":[710,286,219,144]}
+{"kind":"shape","id":"sh/u50n2hkr","slide":5,"bbox":[1002,240,206,200]}
+{"kind":"textbox","id":"sh/pcb61wje","slide":5,"text":"04  SEND","textPreview":"04  SEND","textChars":8,"textLines":1,"bbox":[1020,254,170,24]}
+{"kind":"textbox","id":"sh/4b258r2t","slide":5,"text":"sendApprovedEmail\nDeliver once\nConsume approval state","textPreview":"sendApprovedEmail | Deliver once | Consume approval state","textChars":53,"textLines":3,"bbox":[1020,286,170,144]}
+{"kind":"shape","id":"sh/3atozm18","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/29kn6hk3","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/5grmpsja","slide":5,"bbox":[0,0,0,0]}
+{"kind":"shape","id":"sh/kfi5wn2p","slide":5,"bbox":[72,503,1136,86]}
+{"kind":"textbox","id":"sh/wj25c7al","slide":5,"text":"Guardrail","textPreview":"Guardrail","textChars":9,"textLines":1,"bbox":[96,525,120,24]}
+{"kind":"textbox","id":"sh/xkv6lsr6","slide":5,"text":"No scheduled preference, draft creation, or model decision can substitute for fresh human confirmation.","textPreview":"No scheduled preference, draft creation, or model decision can substitute for fresh human confirmation.","textChars":103,"textLines":1,"bbox":[238,518,920,42]}
+{"kind":"shape","id":"sh/axknaxsf","slide":5,"bbox":[72,680,1136,0]}
+{"kind":"textbox","id":"sh/byt4j290","slide":5,"text":"OpenClaw  /  housing workflows","textPreview":"OpenClaw  /  housing workflows","textChars":30,"textLines":1,"bbox":[72,688,360,18]}
+{"kind":"textbox","id":"sh/knm5g7ah","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1160,688,48,18]}
+{"kind":"notes","id":"nt/8kh4m7","slide":5,"text":"Sources: .agents/skills/property-email-workflows/SKILL.md; src/tools/email.ts; src/agents/tools/email-workflow-tools.ts."}
+{"kind":"slide","id":"sl/ibxlyl","slide":6,"title":"SHARED SESSION, SEPARATE BOUNDARIES","textShapes":19}
+{"kind":"textbox","id":"sh/87u587yt","slide":6,"text":"SHARED SESSION, SEPARATE BOUNDARIES","textPreview":"SHARED SESSION, SEPARATE BOUNDARIES","textChars":35,"textLines":1,"bbox":[72,40,400,24]}
+{"kind":"textbox","id":"sh/n61oz2ho","slide":6,"text":"Housing data can flow into email without collapsing the controls","textPreview":"Housing data can flow into email without collapsing the controls","textChars":64,"textLines":1,"bbox":[72,70,1136,56]}
+{"kind":"textbox","id":"sh/m5sn6xg3","slide":6,"text":"The shared session makes the experience continuous. Each workflow still owns its own contract and side effects.","textPreview":"The shared session makes the experience continuous. Each workflow still owns its own contract and side effects.","textChars":111,"textLines":1,"bbox":[72,130,1136,38]}
+{"kind":"shape","id":"sh/l4j6xszi","slide":6,"bbox":[72,220,160,54]}
+{"kind":"shape","id":"sh/0ja54nyx","slide":6,"bbox":[88,236,128,24]}
+{"kind":"shape","id":"sh/zi14vihc","slide":6,"bbox":[250,220,370,54]}
+{"kind":"textbox","id":"sh/yhsn2dgr","slide":6,"text":"Housing workflow","textPreview":"Housing workflow","textChars":16,"textLines":1,"bbox":[266,236,338,24]}
+{"kind":"shape","id":"sh/50n69czm","slide":6,"bbox":[650,220,558,54]}
+{"kind":"textbox","id":"sh/kfe50ry1","slide":6,"text":"Email workflow","textPreview":"Email workflow","textChars":14,"textLines":1,"bbox":[666,236,526,24]}
+{"kind":"shape","id":"sh/29cfyxgn","slide":6,"bbox":[72,274,160,82]}
+{"kind":"textbox","id":"sh/3algr2x8","slide":6,"text":"Input","textPreview":"Input","textChars":5,"textLines":1,"bbox":[88,296,128,42]}
+{"kind":"shape","id":"sh/4bux0nyt","slide":6,"bbox":[250,274,370,82]}
+{"kind":"textbox","id":"sh/pcnytsfy","slide":6,"text":"Natural-language property request","textPreview":"Natural-language property request","textChars":33,"textLines":1,"bbox":[266,296,338,42]}
+{"kind":"shape","id":"sh/ulcfudgb","slide":6,"bbox":[650,274,558,82]}
+{"kind":"textbox","id":"sh/fmlgnixw","slide":6,"text":"Original housing query + recipient","textPreview":"Original housing query + recipient","textChars":34,"textLines":1,"bbox":[666,296,526,42]}
+{"kind":"shape","id":"sh/g7uxwnyh","slide":6,"bbox":[72,356,160,82]}
+{"kind":"textbox","id":"sh/h83ypsf2","slide":6,"text":"State","textPreview":"State","textChars":5,"textLines":1,"bbox":[88,378,128,42]}
+{"kind":"shape","id":"sh/ehwz6hgv","slide":6,"bbox":[250,356,370,82]}
+{"kind":"textbox","id":"sh/zi5gzmxg","slide":6,"text":"criteria, listingPreviews, market summaries","textPreview":"criteria, listingPreviews, market summaries","textChars":43,"textLines":1,"bbox":[266,378,338,42]}
+{"kind":"shape","id":"sh/vmhcreds","slide":6,"bbox":[650,356,558,82]}
+{"kind":"textbox","id":"sh/al8vi9w7","slide":6,"text":"approvalId + pending/approved status","textPreview":"approvalId + pending/approved status","textChars":36,"textLines":1,"bbox":[666,378,526,42]}
+{"kind":"shape","id":"sh/xozut4vy","slide":6,"bbox":[72,438,160,82]}
+{"kind":"textbox","id":"sh/wnqdkjed","slide":6,"text":"Action","textPreview":"Action","textChars":6,"textLines":1,"bbox":[88,460,128,42]}
+{"kind":"shape","id":"sh/jqhwvedo","slide":6,"bbox":[250,438,370,82]}
+{"kind":"textbox","id":"sh/ip8vm9w3","slide":6,"text":"Query listings or market data","textPreview":"Query listings or market data","textChars":29,"textLines":1,"bbox":[266,460,338,42]}
+{"kind":"shape","id":"sh/5szexovu","slide":6,"bbox":[650,438,558,82]}
+{"kind":"textbox","id":"sh/krqdoje9","slide":6,"text":"Create a draft, then send once","textPreview":"Create a draft, then send once","textChars":30,"textLines":1,"bbox":[666,460,526,42]}
+{"kind":"shape","id":"sh/7e1wzyd0","slide":6,"bbox":[72,520,160,82]}
+{"kind":"textbox","id":"sh/6tsvqtwf","slide":6,"text":"Boundary","textPreview":"Boundary","textChars":8,"textLines":1,"bbox":[88,542,128,42]}
+{"kind":"shape","id":"sh/4jadg3ad","slide":6,"bbox":[250,520,370,82]}
+{"kind":"textbox","id":"sh/pk3up8by","slide":6,"text":"Canonical sessionId","textPreview":"Canonical sessionId","textChars":19,"textLines":1,"bbox":[266,542,338,42]}
+{"kind":"shape","id":"sh/2hsbetsn","slide":6,"bbox":[650,520,558,82]}
+{"kind":"textbox","id":"sh/3i1cnyt8","slide":6,"text":"Exact confirmation phrase","textPreview":"Exact confirmation phrase","textChars":25,"textLines":1,"bbox":[666,542,526,42]}
+{"kind":"shape","id":"sh/gfatcjah","slide":6,"bbox":[72,680,1136,0]}
+{"kind":"textbox","id":"sh/hgjulob2","slide":6,"text":"OpenClaw  /  housing workflows","textPreview":"OpenClaw  /  housing workflows","textChars":30,"textLines":1,"bbox":[72,688,360,18]}
+{"kind":"textbox","id":"sh/utsba9sb","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1160,688,48,18]}
+{"kind":"notes","id":"nt/ibxlyl","slide":6,"text":"Sources: .agents/skills/property-search-orchestrator/SKILL.md; .agents/skills/property-email-workflows/SKILL.md; src/tools/session_memory.ts; src/tools/email.ts."}
+{"kind":"slide","id":"sl/a1l7m4","slide":7,"title":"WHAT THIS SHOWS","textShapes":9}
+{"kind":"textbox","id":"sh/wn214rel","slide":7,"text":"WHAT THIS SHOWS","textPreview":"WHAT THIS SHOWS","textChars":15,"textLines":1,"bbox":[72,74,300,24]}
+{"kind":"textbox","id":"sh/vmtkbmd0","slide":7,"text":"A useful OpenClaw workflow\nkeeps the action visible","textPreview":"A useful OpenClaw workflow | keeps the action visible","textChars":51,"textLines":2,"bbox":[72,142,850,126]}
+{"kind":"shape","id":"sh/ulkj2hwv","slide":7,"bbox":[72,350,330,150]}
+{"kind":"textbox","id":"sh/9kb29cva","slide":7,"text":"Stateful","textPreview":"Stateful","textChars":8,"textLines":1,"bbox":[92,372,280,28]}
+{"kind":"textbox","id":"sh/8j210rep","slide":7,"text":"The same session carries search criteria and results across turns.","textPreview":"The same session carries search criteria and results across turns.","textChars":66,"textLines":1,"bbox":[92,418,280,58]}
+{"kind":"shape","id":"sh/7i9k7md4","slide":7,"bbox":[442,350,330,150]}
+{"kind":"textbox","id":"sh/mh0jyhwj","slide":7,"text":"Deterministic","textPreview":"Deterministic","textChars":13,"textLines":1,"bbox":[462,372,280,28]}
+{"kind":"textbox","id":"sh/lgri5cvy","slide":7,"text":"Intent routing chooses the appropriate property path.","textPreview":"Intent routing chooses the appropriate property path.","textChars":53,"textLines":1,"bbox":[462,418,280,58]}
+{"kind":"shape","id":"sh/kfi1w7ed","slide":7,"bbox":[812,350,330,150]}
+{"kind":"textbox","id":"sh/m1orq5kn","slide":7,"text":"Human-controlled","textPreview":"Human-controlled","textChars":16,"textLines":1,"bbox":[832,372,280,28]}
+{"kind":"textbox","id":"sh/n2xsza18","slide":7,"text":"Email delivery requires review and exact approval.","textPreview":"Email delivery requires review and exact approval.","textChars":50,"textLines":1,"bbox":[832,418,280,58]}
+{"kind":"textbox","id":"sh/o3qtsf2d","slide":7,"text":"OpenClaw’s product value is the seam between conversation and action.","textPreview":"OpenClaw’s product value is the seam between conversation and action.","textChars":69,"textLines":1,"bbox":[72,595,920,30]}
+{"kind":"notes","id":"nt/a1l7m4","slide":7,"text":"Sources: VISION.md; .agents/skills/property-search-orchestrator/SKILL.md; .agents/skills/property-email-workflows/SKILL.md."}
