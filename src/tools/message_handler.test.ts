@@ -50,6 +50,25 @@ describe("formatPropertyResponse", () => {
     expect(formatted).not.toContain("word21");
   });
 
+  it("removes zero-width copy/paste artifacts but preserves emoji joiners", () => {
+    expect(
+      formatPropertyResponse({
+        results: [
+          {
+            address: "770\u2060 \u200BAdeline Avenue",
+            price: 399999,
+            beds: 3,
+            baths: 2,
+            sqft: 1600,
+            remarks: "Bright 👨‍👩‍👧‍👦 home",
+          },
+        ],
+      }),
+    ).toContain(
+      "1. 🏠 770 Adeline Avenue\n💰 $399,999 | 🛏 3bd/2ba | 📐 1600 sqft\n📅 0 days on market\n📝 Bright 👨‍👩‍👧‍👦 home",
+    );
+  });
+
   it("formats missing search fields consistently", () => {
     expect(
       formatPropertyResponse({

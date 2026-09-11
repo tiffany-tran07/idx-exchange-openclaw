@@ -65,8 +65,15 @@ function stripWhatsAppPluralToolXml(text: string): string {
   return stripToolCallXmlTags(text, { stripFunctionCallsXmlPayloads: true });
 }
 
+// U+200D is intentionally retained because it joins legitimate emoji
+// sequences. The other characters here are copy/paste or formatting guards
+// that should never be sent as visible WhatsApp message content.
+function stripWhatsAppFormattingArtifacts(text: string): string {
+  return text.replace(/[\u200B\u200C\u2060\uFEFF]/gu, "");
+}
+
 function finalizeWhatsAppVisibleText(text: string): string {
-  return sanitizeForPlainText(stripWhatsAppPluralToolXml(text));
+  return stripWhatsAppFormattingArtifacts(sanitizeForPlainText(stripWhatsAppPluralToolXml(text)));
 }
 
 export function normalizeWhatsAppPayloadText(text: string | undefined): string {

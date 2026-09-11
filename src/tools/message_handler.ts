@@ -1,3 +1,9 @@
+// Remove copy/paste formatting artifacts without removing U+200D, which is a
+// real part of many emoji sequences (for example, family emojis).
+function normalizePropertyText(value: unknown): string {
+  return String(value ?? "").replace(/[\u200B\u200C\u2060\uFEFF]/gu, "");
+}
+
 export function formatPropertyResponse(result: any): string {
   // Format the product response once so every channel receives the same content.
   const properties = result.results || result.listings || result.recommendations;
@@ -18,9 +24,9 @@ export function formatPropertyResponse(result: any): string {
           const beds = l.beds ?? l.L_Bedrooms ?? 0;
           const baths = l.baths ?? l.L_Bathrooms ?? 0;
           const sqft = l.sqft ?? l.L_SqFt ?? 0;
-          const address = l.address ?? l.L_Address ?? "Unknown address";
-          const remarks = l.remarks ?? l.L_Remarks;
-          const remarksWords = typeof remarks === "string" ? remarks.trim().split(/\s+/) : [];
+          const address = normalizePropertyText(l.address ?? l.L_Address ?? "Unknown address");
+          const remarks = normalizePropertyText(l.remarks ?? l.L_Remarks);
+          const remarksWords = remarks.trim() ? remarks.trim().split(/\s+/) : [];
           const remarksPreview = remarksWords.length
             ? `\n📝 ${remarksWords.slice(0, 20).join(" ")}${remarksWords.length > 20 ? "…" : ""}`
             : "";
@@ -57,7 +63,7 @@ export function formatPropertyResponse(result: any): string {
   }
 
   if (result.response) {
-    return result.response;
+    return normalizePropertyText(result.response);
   }
 
   return "No results found.";

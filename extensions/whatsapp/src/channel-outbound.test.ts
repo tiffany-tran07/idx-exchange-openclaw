@@ -416,6 +416,25 @@ describe("whatsappChannelOutbound", () => {
     );
   });
 
+  it("preserves Unicode emojis in formatted property text", () => {
+    const text =
+      "🏡 Matching properties (1):\n\n" +
+      "1. 🏠 *7341 Lockwood St*\n" +
+      "💰 $399,999 | 🛏 3bd/2ba | 📐 1,600 sqft\n" +
+      "📅 4 days on market";
+
+    expect(whatsappChannelOutbound.sanitizeText?.({ text, payload: { text } })).toBe(text);
+    expect(whatsappChannelOutbound.normalizePayload?.({ payload: { text } })).toEqual({ text });
+  });
+
+  it("removes zero-width list artifacts at the final outbound boundary", () => {
+    const text = "1.\u2060 \u2060770 Adeline Avenue\n👨‍👩‍👧‍👦 home";
+
+    expect(whatsappChannelOutbound.sanitizeText?.({ text, payload: { text } })).toBe(
+      "1. 770 Adeline Avenue\n👨‍👩‍👧‍👦 home",
+    );
+  });
+
   it("preserves indentation for live text sends", async () => {
     await whatsappChannelOutbound.sendText!({
       cfg: {},

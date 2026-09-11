@@ -1,7 +1,7 @@
 import { formatPropertyResponse } from "./message_handler.js";
 import { clearSession, getSession } from "./session_memory.js";
 
-type Intent = "search" | "market" | "recommend" | "knowledge" | "mixed";
+export type Intent = "search" | "market" | "recommend" | "knowledge" | "mixed";
 
 function formatResult<T extends { response: string }>(result: T): T {
   return { ...result, response: formatPropertyResponse(result) };
@@ -70,14 +70,14 @@ export async function classifyIntent(query: string): Promise<Intent> {
   return "knowledge";
 }
 
-export async function orchestrate(query: string, sessionId: string) {
+export async function orchestrate(query: string, sessionId: string, intent?: Intent) {
   if (/\breset my property search\b/i.test(query)) {
     clearSession(sessionId);
     return formatResult({ response: "Your property search has been reset for this conversation." });
   }
 
-  const intent = await classifyIntent(query);
-  switch (intent) {
+  const resolvedIntent = intent ?? (await classifyIntent(query));
+  switch (resolvedIntent) {
     case "search": {
       const { runRequirementsAgent } = await import("../agents/requirements_agent.js");
       const requirements = await runRequirementsAgent(query, sessionId);
@@ -111,8 +111,10 @@ export async function orchestrate(query: string, sessionId: string) {
           import("../agents/market_stats_agent.js"),
           import("../agents/requirements_agent.js"),
         ]);
-      const requirements = await runRequirementsAgent(query, sessionId);
-      const stats = await runMarketStatsAgent(query, sessionId);
+      const { parsePropertyQuery } = await import("./property_parser.js");
+      const parsedCriteria = await parsePropertyQuery(query);
+      const requirements = await runRequirementsAgent(query, sessionId, parsedCriteria);
+      const stats = await runMarketStatsAgent(query, sessionId, parsedCriteria);
       if (!requirements.isComplete) {
         return formatResult({
           response: `${stats.response}\n\nFor a listing search, I still need: ${requirements.missingFields.join(", ")}.`,

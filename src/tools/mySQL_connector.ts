@@ -3,12 +3,20 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
 
-// Load .env from the directory containing this script (assuming it's in src/tools/)
-// or relative to the process working directory
-dotenv.config({
-  path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.env"),
-  quiet: true,
-});
+// The source file, compiled tool chunks, and bundled Gateway chunks live at
+// different depths. Try the repository root from each supported layout so the
+// Gateway does not silently fall back to root/default credentials.
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+for (const envPath of [
+  path.resolve(moduleDir, "../../.env"),
+  path.resolve(moduleDir, "../.env"),
+  path.resolve(process.cwd(), ".env"),
+]) {
+  const result = dotenv.config({ path: envPath, quiet: true });
+  if (!result.error) {
+    break;
+  }
+}
 
 const pool = mysql.createPool({
   host: process.env.MYSQL_HOST || "localhost",

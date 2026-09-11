@@ -3,9 +3,13 @@ import type { PropertyCriteria } from "./session_memory.js";
 export async function parsePropertyQuery(
   query: string,
 ): Promise<PropertyCriteria & { hasView?: boolean }> {
-  const cityMatch = query.match(
-    /in ([A-Za-z\s]+?)(?:\s+under|\s+with|\s+at|\s+that|\s+which|\s+for|\s+and|,|\?|\.|$)/i,
-  );
+  const cityMatch =
+    query.match(
+      /in ([A-Za-z\s]+?)(?:\s+under|\s+with|\s+at|\s+that|\s+which|\s+for|\s+and|,|\?|\.|$)/i,
+    ) ??
+    query.match(
+      /\bfor\s+([A-Za-z\s]+?)(?:\s+under|\s+with|\s+at|\s+that|\s+which|\s+and|,|\?|\.|$)/i,
+    );
   const priceMatch = query.match(/under \$?([\d,.]+)(k|m)?/i);
   const bedsMatch = query.match(/(\d+(?:\.5)?)[\s-]*(bed|beds|bedroom|bedrooms)/i);
   const bathsMatch = query.match(/(\d+(?:\.5)?)[\s-]*(bath|baths|bathroom)/i);
@@ -19,7 +23,10 @@ export async function parsePropertyQuery(
     "single family": "SingleFamilyResidence",
     land: "UnimprovedLand",
   };
-  const typeKey = Object.keys(typeMap).find((k) => query.toLowerCase().includes(k));
+  const normalizedTypeQuery = query.replace(/\bsingle[\s-]+family\b/gi, "single family");
+  const typeKey = Object.keys(typeMap).find((k) =>
+    new RegExp(`\\b${k}\\b`, "i").test(normalizedTypeQuery),
+  );
   let maxPrice: number | undefined;
   if (priceMatch) {
     maxPrice = Number(priceMatch[1]!.replace(/,/g, ""));

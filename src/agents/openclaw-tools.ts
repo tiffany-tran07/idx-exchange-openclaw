@@ -48,6 +48,7 @@ import {
 } from "./tools/conversation-tools.js";
 import { createCronTool } from "./tools/cron-tool.js";
 import { createDashboardTool } from "./tools/dashboard-tool.js";
+import { createEmailWorkflowTools } from "./tools/email-workflow-tools.js";
 import { createEmbeddedCallGateway } from "./tools/embedded-gateway-stub.js";
 import { createGatewayToolCallerWrapper } from "./tools/gateway-caller-context.js";
 import { createGatewayTool } from "./tools/gateway-tool.js";
@@ -70,6 +71,7 @@ import { createOpenClawDelegateToolsForRun } from "./tools/openclaw-delegate-too
 import { createPdfTool } from "./tools/pdf-tool.js";
 import { createPortalTool } from "./tools/portal-tool.js";
 import { createProgressCardTool } from "./tools/progress-card-tool.js";
+import { createPropertySearchTool } from "./tools/property-search-tool.js";
 import { createScreenTool } from "./tools/screen-tool.js";
 import { createSecretsTool } from "./tools/secrets-tool.js";
 import { createSessionStatusTool } from "./tools/session-status-tool.js";
@@ -344,6 +346,8 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
     : null;
   const transcriptsTool = resolveTranscriptsTool(resolvedConfig, sessionAgentId, options);
   const tools: AnyAgentTool[] = [
+    ...(options?.sessionId ? [createPropertySearchTool(options.sessionId)] : []),
+    ...(options?.sessionId ? createEmailWorkflowTools(options.sessionId) : []),
     createDashboardTool({
       agentSessionKey: options?.runSessionKey ?? options?.agentSessionKey,
       agentId: sessionAgentId,

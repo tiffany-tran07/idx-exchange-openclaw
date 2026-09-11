@@ -18,7 +18,8 @@ export function createPropertySearchTool(sessionId?: string): AnyAgentTool {
   return {
     label: "Property Search",
     name: "property_search",
-    catalogMode: "direct-only",
+    // Omit catalogMode so the normal OpenClaw Tool Search path can defer this
+    // schema. Only direct-only tools are retained in every model payload.
     displaySummary: "Search active housing listings from the user's criteria.",
     description:
       "Run the deterministic property-search workflow for requests containing a location, price, bedrooms, bathrooms, square footage, listing, house, condo, townhome, or townhouse. Use this tool instead of RAG. It stores criteria and listing previews in the current OpenClaw session.",
@@ -34,7 +35,8 @@ export function createPropertySearchTool(sessionId?: string): AnyAgentTool {
           "This tool accepts property searches, not general knowledge questions.",
         );
       }
-      const result = await orchestrate(query, sessionId);
+      const intent = await classifyIntent(query);
+      const result = await orchestrate(query, sessionId, intent);
       return textResult(result.response, {
         status: "ok",
         intent: "property_search",

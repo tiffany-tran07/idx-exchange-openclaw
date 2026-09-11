@@ -20,9 +20,10 @@ export const REQUIRED_PROPERTY_FIELDS = [
 export async function runRequirementsAgent(
   query: string,
   sessionId: string,
+  parsedCriteria?: PropertyCriteria & { hasView?: boolean },
 ): Promise<RequirementsStatus> {
   // 1. Extract new data from the input string
-  const newCriteria = await parsePropertyQuery(query);
+  const newCriteria = parsedCriteria ?? (await parsePropertyQuery(query));
 
   // Filter out null/undefined values so we don't clobber existing memory
   const { hasView: _hasView, ...criteria } = newCriteria;

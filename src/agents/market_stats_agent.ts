@@ -1,9 +1,14 @@
 import { getMarketSummary } from "../tools/city_market_summary.js";
 import { parsePropertyQuery } from "../tools/property_parser.js";
+import type { PropertyCriteria } from "../tools/session_memory.js";
 import { getSession, updateSession } from "../tools/session_memory.js";
 
-export async function runMarketStatsAgent(query: string, sessionId: string) {
-  const newCriteria = await parsePropertyQuery(query);
+export async function runMarketStatsAgent(
+  query: string,
+  sessionId: string,
+  parsedCriteria?: PropertyCriteria & { hasView?: boolean },
+) {
+  const newCriteria = parsedCriteria ?? (await parsePropertyQuery(query));
   if (newCriteria.city) {
     updateSession(sessionId, { criteria: { city: newCriteria.city } });
   }

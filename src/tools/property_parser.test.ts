@@ -16,4 +16,21 @@ describe("parsePropertyQuery", () => {
       type: "Townhouse",
     });
   });
+
+  it("parses market cities introduced by for without matching substrings as types", async () => {
+    await expect(parsePropertyQuery("Give me market stats for Oakland")).resolves.toMatchObject({
+      city: "Oakland",
+      type: undefined,
+    });
+  });
+
+  it("normalizes hyphenated single-family property types", async () => {
+    await expect(
+      parsePropertyQuery("Find a single-family home in San Jose under $1.5M"),
+    ).resolves.toMatchObject({
+      city: "San Jose",
+      maxPrice: 1_500_000,
+      type: "SingleFamilyResidence",
+    });
+  });
 });

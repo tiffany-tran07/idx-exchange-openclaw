@@ -19,6 +19,7 @@ describe("property_search tool", () => {
     vi.mocked(classifyIntent).mockResolvedValue("search");
 
     const tool = createPropertySearchTool("gateway-session-1");
+    expect(tool.catalogMode).toBeUndefined();
     const result = await tool.execute("call-1", {
       query: "A townhome in San Jose under $1.5M",
     });
@@ -26,6 +27,7 @@ describe("property_search tool", () => {
     expect(orchestrate).toHaveBeenCalledWith(
       "A townhome in San Jose under $1.5M",
       "gateway-session-1",
+      "search",
     );
     expect(result.content).toEqual([{ type: "text", text: "Found 1 matching property." }]);
     expect(result.details).toMatchObject({ status: "ok", intent: "property_search" });
